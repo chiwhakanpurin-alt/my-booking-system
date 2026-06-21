@@ -35,6 +35,13 @@ export default function AdminDashboard() {
     activityName: string;
   } | null>(null);
 
+  // Details Modal state
+  const [detailsModal, setDetailsModal] = useState<{
+    isOpen: boolean;
+    details: string;
+    activityName: string;
+  } | null>(null);
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -52,8 +59,45 @@ export default function AdminDashboard() {
     }
   };
 
+  const subscribeAdminToPush = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const registration = await navigator.serviceWorker.ready;
+      const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!publicVapidKey) return;
+
+      const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4);
+      const base64 = (publicVapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray
+        });
+      }
+
+      // Send to server
+      await fetch('/api/admin/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pushSubscription: subscription }),
+      });
+    } catch (err) {
+      console.error('Admin push sub error:', err);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
+    subscribeAdminToPush();
   }, []);
 
   const handleActionClick = (bookingId: string, action: 'อนุมัติแล้ว' | 'ยกเลิก' | 'ลบ', activityName: string) => {
@@ -253,6 +297,11 @@ export default function AdminDashboard() {
                         statusText = 'ยกเลิก';
                       }
 
+                      let cleanDetails = '';
+                      if (booking.details) {
+                        cleanDetails = booking.details.split('---PUSH_SUB---')[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim();
+                      }
+
                       return (
                         <tr
                           key={booking.id}
@@ -263,10 +312,17 @@ export default function AdminDashboard() {
                             <div className="font-bold text-slate-900 dark:text-white">
                               {booking.activity_name}
                             </div>
-                            {booking.details && (
-                              <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1 max-w-[220px]" title={booking.details.split('---PUSH_SUB---')[0]}>
-                                {booking.details.split('---PUSH_SUB---')[0]}
-                              </div>
+                            {cleanDetails && (
+                              <button
+                                onClick={() => setDetailsModal({
+                                  isOpen: true,
+                                  details: cleanDetails,
+                                  activityName: booking.activity_name
+                                })}
+                                className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer"
+                              >
+                                ดูรายละเอียด
+                              </button>
                             )}
                           </td>
                           {/* Booked by */}
@@ -396,6 +452,49 @@ export default function AdminDashboard() {
                   }`}
                 >
                   ยืนยัน
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal Overlay */}
+      {detailsModal && detailsModal.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+          onClick={() => setDetailsModal(null)}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-3xl glass-modal shadow-2xl border border-slate-200/50 dark:border-zinc-800/40 p-6 animate-fade-in text-slate-800 dark:text-zinc-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-snug flex items-center justify-between">
+                  <span>รายละเอียดเพิ่มเติม</span>
+                  <button onClick={() => setDetailsModal(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition cursor-pointer">
+                    <X className="h-5 w-5 text-slate-400" />
+                  </button>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                  {detailsModal.activityName}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800/80">
+                <p className="text-sm text-slate-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                  {detailsModal.details}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => setDetailsModal(null)}
+                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition text-sm cursor-pointer"
+                >
+                  ปิด
                 </button>
               </div>
             </div>

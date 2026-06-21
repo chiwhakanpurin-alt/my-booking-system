@@ -3,6 +3,14 @@ import { supabase } from '@/lib/supabase';
 import { syncToGoogleSheets } from '@/lib/google-sheets';
 import { sendBookingNotificationToAdmin, sendBookingConfirmationToUser } from '@/lib/email';
 import { rateLimit, getIP } from '@/lib/rate-limit';
+import webpush from 'web-push';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
+webpush.setVapidDetails(
+  'mailto:chiwhakanpurin@gmail.com',
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+);
 
 // GET: Fetch all bookings (ordered by booking_date and start_time)
 export async function GET() {
@@ -10,6 +18,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('bookings')
       .select('*')
+      .neq('activity_name', 'ADMIN_SUBSCRIPTION')
       .order('booking_date', { ascending: true })
       .order('start_time', { ascending: true });
 
@@ -100,7 +109,7 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // 📧 Send notification to admin (wait for it to finish so Vercel doesn't kill the function early)
+    // 📧 Send notification to admin via Email (wait for it to finish)
     try {
       await sendBookingNotificationToAdmin({
         activityName: cleanActivity,
@@ -113,6 +122,41 @@ export async function POST(request: Request) {
       });
     } catch (err) {
       console.error('Email to Admin Error:', err);
+    }
+
+    // 🚀 Send notification to admin via Web Push
+    try {
+      const { data: adminSubs } = await supabaseAdmin
+        .from('bookings')
+        .select('id, details')
+        .eq('activity_name', 'ADMIN_SUBSCRIPTION');
+      
+      if (adminSubs && adminSubs.length > 0) {
+        const title = '📢 มีคำขอจองห้องประชุมใหม่!';
+        const bodyMsg = `ผู้จอง: ${cleanBookedBy}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time}`;
+        const payload = JSON.stringify({ title, body: bodyMsg });
+
+        const pushPromises = adminSubs.map(async (sub) => {
+          try {
+            if (sub.details) {
+              const pushSubscription = JSON.parse(sub.details);
+              await webpush.sendNotification(pushSubscription, payload);
+            }
+          } catch (err: any) {
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              // Subscription has expired or is no longer valid, delete it
+              console.log('Deleting expired admin subscription:', sub.id);
+              await supabaseAdmin.from('bookings').delete().eq('id', sub.id);
+            } else {
+              console.error('Admin Push Notification Error:', err);
+            }
+          }
+        });
+
+        await Promise.all(pushPromises);
+      }
+    } catch (err) {
+      console.error('Admin Web Push Process Error:', err);
     }
 
     // 📧 Send confirmation to user (background)
