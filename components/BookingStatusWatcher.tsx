@@ -168,7 +168,17 @@ export default function BookingStatusWatcher() {
             updated.status === 'cancelled';
 
           if (changed && isActionable) {
-            showPopup(updated);
+            try {
+              const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+              if (pending.includes(updated.id)) {
+                showPopup(updated);
+                // Remove from pending once handled
+                const newPending = pending.filter((id: string) => id !== updated.id);
+                sessionStorage.setItem('pending_bookings', JSON.stringify(newPending));
+              }
+            } catch (e) {
+              console.error('Failed to parse pending_bookings', e);
+            }
           }
         }
       )

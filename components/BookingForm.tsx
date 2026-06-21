@@ -79,6 +79,17 @@ export default function BookingForm() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Store booking ID in sessionStorage to show notifications only to this user
+        try {
+          const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+          if (data.data?.id) {
+            pending.push(data.data.id);
+            sessionStorage.setItem('pending_bookings', JSON.stringify(pending));
+          }
+        } catch (e) {
+          console.error('Failed to save to sessionStorage', e);
+        }
+
         toast.success('ส่งคำขอจองสำเร็จ! 🎉', 'ระบบรออนุมัติจากผู้ดูแล กำลังพากลับหน้าหลัก...', 3000);
         // Reset form
         setFormData({

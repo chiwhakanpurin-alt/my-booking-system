@@ -81,9 +81,6 @@ export default function DashboardStats({ bookings, totalRooms = 5 }: DashboardSt
         const IconComponent = stat.icon;
         return (
           <div key={index} className="relative group hover:scale-[1.01] transition-all duration-300">
-            {/* Smooth Aura Glow behind the card (hardware accelerated, avoids blocky clipping) */}
-            <div className={`absolute -inset-0.5 rounded-2xl bg-gradient-to-br ${stat.colorClass} opacity-15 blur-xl group-hover:opacity-30 group-hover:blur-2xl transition-all duration-500 will-change-[filter,opacity]`}></div>
-
             {/* Main Card */}
             <div className="relative h-full overflow-hidden rounded-2xl glass-panel p-5 shadow-sm border border-slate-200/50 dark:border-zinc-800/40 bg-white/40 dark:bg-zinc-900/40">
               <div className="flex items-center justify-between">
