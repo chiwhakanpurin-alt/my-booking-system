@@ -19,8 +19,7 @@ export default function AdminLogin() {
       try {
         const res = await fetch('/api/admin/session');
         if (res.ok) {
-          router.push('/admin');
-          router.refresh();
+          window.location.href = '/admin';
         }
       } catch {
         // Not logged in, stay here
@@ -32,12 +31,17 @@ export default function AdminLogin() {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [router]);
+  }, []);
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 16) {
       setError(null);
-      setPin((prev) => prev + num);
+      const newPin = pin + num;
+      setPin(newPin);
+      
+      if (newPin.length === 16) {
+        handleLogin(newPin);
+      }
     }
   };
 
@@ -73,8 +77,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        router.push('/admin');
-        router.refresh();
+        window.location.href = '/admin';
       } else {
         setError(data.message || 'รหัสผ่านไม่ถูกต้อง');
         triggerShake();
