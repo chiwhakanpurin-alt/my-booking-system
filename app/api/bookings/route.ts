@@ -79,9 +79,14 @@ export async function POST(request: Request) {
     const cleanDetails = details ? details.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
     const cleanEmail = email.trim().toLowerCase();
 
+    let pushSubString = '';
+    if (body.pushSubscription) {
+      pushSubString = `\n\n---PUSH_SUB---\n${JSON.stringify(body.pushSubscription)}`;
+    }
+
     const combinedDetails = cleanDetails 
-      ? `อีเมลผู้จอง: ${cleanEmail}\n\n${cleanDetails}`
-      : `อีเมลผู้จอง: ${cleanEmail}`;
+      ? `อีเมลผู้จอง: ${cleanEmail}\n\n${cleanDetails}${pushSubString}`
+      : `อีเมลผู้จอง: ${cleanEmail}${pushSubString}`;
 
     const newBooking = {
       activity_name: cleanActivity,

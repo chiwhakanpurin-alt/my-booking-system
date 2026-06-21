@@ -4,7 +4,13 @@ import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { verifyJWT } from '@/lib/jwt';
 import { syncToGoogleSheets } from '@/lib/google-sheets';
-import { sendApprovalNotificationToUser, sendCancellationNotificationToUser } from '@/lib/email';
+import webpush from 'web-push';
+
+webpush.setVapidDetails(
+  'mailto:chiwhakanpurin@gmail.com',
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+);
 
 export async function POST(request: Request) {
   try {
@@ -62,44 +68,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'ไม่พบรายการจองที่ระบุ' }, { status: 404 });
     }
 
-    // Extract user email from details if it was appended there
+    // Extract user email and push subscription
     let extractedEmail = '';
-    if (bookingData.details && bookingData.details.startsWith('อีเมลผู้จอง: ')) {
-      const match = bookingData.details.match(/^อีเมลผู้จอง:\s*([^\s]+)/);
-      if (match) {
-        extractedEmail = match[1];
+    let pushSubscription: any = null;
+
+    if (bookingData.details) {
+      if (bookingData.details.includes('---PUSH_SUB---')) {
+        const parts = bookingData.details.split('---PUSH_SUB---');
+        try {
+          pushSubscription = JSON.parse(parts[1].trim());
+        } catch (e) {
+          console.error('Failed to parse push sub', e);
+        }
+        const match = parts[0].match(/^อีเมลผู้จอง:\s*([^\s]+)/);
+        if (match) extractedEmail = match[1];
+      } else {
+        const match = bookingData.details.match(/^อีเมลผู้จอง:\s*([^\s]+)/);
+        if (match) extractedEmail = match[1];
       }
     }
 
-    // 5. 📧 Send notification to user (wait for it to finish)
-    if (status === 'อนุมัติแล้ว') {
+    // 5. 🚀 Send Push Notification to user (wait for it to finish)
+    if (pushSubscription) {
       try {
-        await sendApprovalNotificationToUser({
-          activityName: bookingData.activity_name,
-          bookedBy: bookingData.booked_by,
-          roomName: bookingData.room_name,
-          bookingDate: bookingData.booking_date,
-          startTime: bookingData.start_time,
-          endTime: bookingData.end_time,
-          userEmail: extractedEmail || bookingData.email,
-        });
+        const title = status === 'อนุมัติแล้ว' 
+          ? '✅ อนุมัติการจองแล้ว!' 
+          : '❌ ยกเลิกการจอง';
+        
+        const bodyMsg = status === 'อนุมัติแล้ว'
+          ? `การจองห้อง ${bookingData.room_name} ของคุณได้รับการอนุมัติแล้ว`
+          : `การจองห้อง ${bookingData.room_name} ของคุณถูกยกเลิก`;
+
+        await webpush.sendNotification(pushSubscription, JSON.stringify({ title, body: bodyMsg }));
       } catch (err) {
-        console.error('Email to User (Approval) Error:', err);
+        console.error('Push Notification Error:', err);
       }
-    } else if (status === 'ยกเลิก') {
-      try {
-        await sendCancellationNotificationToUser({
-          activityName: bookingData.activity_name,
-          bookedBy: bookingData.booked_by,
-          roomName: bookingData.room_name,
-          bookingDate: bookingData.booking_date,
-          startTime: bookingData.start_time,
-          endTime: bookingData.end_time,
-          userEmail: extractedEmail || bookingData.email,
-        });
-      } catch (err) {
-        console.error('Email to User (Cancellation) Error:', err);
-      }
+    } else {
+      console.log('No push subscription found for user', extractedEmail);
     }
 
     // 6. Sync status update to Google Sheets in background

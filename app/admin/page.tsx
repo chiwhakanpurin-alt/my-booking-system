@@ -264,8 +264,8 @@ export default function AdminDashboard() {
                               {booking.activity_name}
                             </div>
                             {booking.details && (
-                              <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1 max-w-[220px]" title={booking.details}>
-                                {booking.details}
+                              <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1 max-w-[220px]" title={booking.details.split('---PUSH_SUB---')[0]}>
+                                {booking.details.split('---PUSH_SUB---')[0]}
                               </div>
                             )}
                           </td>

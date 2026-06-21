@@ -66,14 +66,51 @@ export default function BookingForm() {
       return;
     }
 
+    const subscribeToPush = async () => {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return null;
+        const registration = await navigator.serviceWorker.ready;
+        const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!publicVapidKey) return null;
+
+        const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4);
+        const base64 = (publicVapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) return existingSub;
+
+        return await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray
+        });
+      } catch (err) {
+        console.error('Push sub error:', err);
+        return null;
+      }
+    };
+
     try {
       setLoading(true);
+      const pushSubscription = await subscribeToPush();
+
+      const payload = {
+        ...formData,
+        pushSubscription
+      };
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
