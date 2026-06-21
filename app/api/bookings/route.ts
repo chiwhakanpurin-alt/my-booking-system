@@ -104,16 +104,20 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // 📧 Send notification to admin (background)
-    sendBookingNotificationToAdmin({
-      activityName: cleanActivity,
-      bookedBy: cleanBookedBy,
-      roomName: room_name,
-      bookingDate: booking_date,
-      startTime: start_time,
-      endTime: end_time,
-      details: cleanDetails,
-    }).catch((err) => console.error('Background Email to Admin Error:', err));
+    // 📧 Send notification to admin (wait for it to finish so Vercel doesn't kill the function early)
+    try {
+      await sendBookingNotificationToAdmin({
+        activityName: cleanActivity,
+        bookedBy: cleanBookedBy,
+        roomName: room_name,
+        bookingDate: booking_date,
+        startTime: start_time,
+        endTime: end_time,
+        details: cleanDetails,
+      });
+    } catch (err) {
+      console.error('Email to Admin Error:', err);
+    }
 
     // 📧 Send confirmation to user (background)
     // Removed because the user only wants notification on approval

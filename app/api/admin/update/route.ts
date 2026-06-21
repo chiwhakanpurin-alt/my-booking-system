@@ -71,27 +71,35 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. 📧 Send notification to user (background)
+    // 5. 📧 Send notification to user (wait for it to finish)
     if (status === 'อนุมัติแล้ว') {
-      sendApprovalNotificationToUser({
-        activityName: bookingData.activity_name,
-        bookedBy: bookingData.booked_by,
-        roomName: bookingData.room_name,
-        bookingDate: bookingData.booking_date,
-        startTime: bookingData.start_time,
-        endTime: bookingData.end_time,
-        userEmail: extractedEmail || bookingData.email,
-      }).catch((err) => console.error('Background Email to User (Approval) Error:', err));
+      try {
+        await sendApprovalNotificationToUser({
+          activityName: bookingData.activity_name,
+          bookedBy: bookingData.booked_by,
+          roomName: bookingData.room_name,
+          bookingDate: bookingData.booking_date,
+          startTime: bookingData.start_time,
+          endTime: bookingData.end_time,
+          userEmail: extractedEmail || bookingData.email,
+        });
+      } catch (err) {
+        console.error('Email to User (Approval) Error:', err);
+      }
     } else if (status === 'ยกเลิก') {
-      sendCancellationNotificationToUser({
-        activityName: bookingData.activity_name,
-        bookedBy: bookingData.booked_by,
-        roomName: bookingData.room_name,
-        bookingDate: bookingData.booking_date,
-        startTime: bookingData.start_time,
-        endTime: bookingData.end_time,
-        userEmail: extractedEmail || bookingData.email,
-      }).catch((err) => console.error('Background Email to User (Cancellation) Error:', err));
+      try {
+        await sendCancellationNotificationToUser({
+          activityName: bookingData.activity_name,
+          bookedBy: bookingData.booked_by,
+          roomName: bookingData.room_name,
+          bookingDate: bookingData.booking_date,
+          startTime: bookingData.start_time,
+          endTime: bookingData.end_time,
+          userEmail: extractedEmail || bookingData.email,
+        });
+      } catch (err) {
+        console.error('Email to User (Cancellation) Error:', err);
+      }
     }
 
     // 6. Sync status update to Google Sheets in background
