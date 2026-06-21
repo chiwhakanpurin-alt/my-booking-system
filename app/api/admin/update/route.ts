@@ -62,6 +62,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'ไม่พบรายการจองที่ระบุ' }, { status: 404 });
     }
 
+    // Extract user email from details if it was appended there
+    let extractedEmail = '';
+    if (bookingData.details && bookingData.details.startsWith('อีเมลผู้จอง: ')) {
+      const match = bookingData.details.match(/^อีเมลผู้จอง:\s*([^\s]+)/);
+      if (match) {
+        extractedEmail = match[1];
+      }
+    }
+
     // 5. 📧 Send notification to user (background)
     if (status === 'อนุมัติแล้ว') {
       sendApprovalNotificationToUser({
@@ -71,7 +80,7 @@ export async function POST(request: Request) {
         bookingDate: bookingData.booking_date,
         startTime: bookingData.start_time,
         endTime: bookingData.end_time,
-        userEmail: bookingData.email,
+        userEmail: extractedEmail || bookingData.email,
       }).catch((err) => console.error('Background Email to User (Approval) Error:', err));
     } else if (status === 'ยกเลิก') {
       sendCancellationNotificationToUser({
@@ -81,7 +90,7 @@ export async function POST(request: Request) {
         bookingDate: bookingData.booking_date,
         startTime: bookingData.start_time,
         endTime: bookingData.end_time,
-        userEmail: bookingData.email,
+        userEmail: extractedEmail || bookingData.email,
       }).catch((err) => console.error('Background Email to User (Cancellation) Error:', err));
     }
 

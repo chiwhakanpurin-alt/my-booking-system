@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { syncToGoogleSheets } from '@/lib/google-sheets';
-import { sendBookingNotificationToAdmin } from '@/lib/email';
+import { sendBookingNotificationToAdmin, sendBookingConfirmationToUser } from '@/lib/email';
 import { rateLimit, getIP } from '@/lib/rate-limit';
 
 // GET: Fetch all bookings (ordered by booking_date and start_time)
@@ -79,16 +79,19 @@ export async function POST(request: Request) {
     const cleanDetails = details ? details.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
     const cleanEmail = email.trim().toLowerCase();
 
+    const combinedDetails = cleanDetails 
+      ? `อีเมลผู้จอง: ${cleanEmail}\n\n${cleanDetails}`
+      : `อีเมลผู้จอง: ${cleanEmail}`;
+
     const newBooking = {
       activity_name: cleanActivity,
       booked_by: cleanBookedBy,
-      email: cleanEmail,
       room_name,
       booking_date,
       start_time,
       end_time,
       status: 'รออนุมัติ', // Default status: "รออนุมัติ"
-      details: cleanDetails,
+      details: combinedDetails,
     };
 
     const { data, error } = await supabase
@@ -111,6 +114,9 @@ export async function POST(request: Request) {
       endTime: end_time,
       details: cleanDetails,
     }).catch((err) => console.error('Background Email to Admin Error:', err));
+
+    // 📧 Send confirmation to user (background)
+    // Removed because the user only wants notification on approval
 
     // Google Sheets Integration: Sync in background if URL is set (graceful fallback if not)
     // We do not await this to prevent slowing down the client's API response

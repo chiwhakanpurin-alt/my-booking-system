@@ -1,6 +1,13 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
 const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@booking.com';
 
 interface EmailNotificationData {
@@ -85,17 +92,101 @@ export async function sendBookingNotificationToAdmin(data: EmailNotificationData
       </html>
     `;
 
-    const response = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    const info = await transporter.sendMail({
+      from: `"ระบบจองห้องประชุม" <${process.env.GMAIL_USER || adminEmail}>`,
       to: adminEmail,
       subject: `🔔 มีการจองห้องประชุมใหม่ - ${activityName}`,
       html: htmlContent,
     });
 
-    console.log('✅ Email sent to admin:', response);
-    return response;
+    console.log('✅ Email sent to admin:', info.messageId);
+    return info;
   } catch (error) {
     console.error('❌ Failed to send admin email:', error);
+    throw error;
+  }
+}
+
+// 📧 Send booking confirmation (pending) notification to user
+export async function sendBookingConfirmationToUser(data: EmailNotificationData) {
+  try {
+    const { activityName, bookedBy, roomName, bookingDate, startTime, endTime, userEmail } = data;
+    
+    if (!userEmail) {
+      console.warn('⚠️ User email not provided, skipping notification');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="th">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .info-row { display: flex; margin-bottom: 15px; }
+          .label { font-weight: bold; color: #d97706; min-width: 120px; }
+          .value { color: #555; }
+          .pending-badge { display: inline-block; background: #f59e0b; color: white; padding: 8px 16px; border-radius: 20px; margin-top: 15px; }
+          .footer { text-align: center; margin-top: 20px; color: #999; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>⏳ ระบบได้รับคำขอจองห้องประชุมของคุณแล้ว</h1>
+          </div>
+          <div class="content">
+            <p>สวัสดีคุณ ${bookedBy}</p>
+            <p>เราได้รับคำขอจองห้องประชุมของคุณแล้ว ขณะนี้คำขอของคุณอยู่ในสถานะ <strong>รอการอนุมัติ</strong></p>
+            
+            <div class="pending-badge">รออนุมัติ ⏳</div>
+            
+            <h3 style="color: #d97706; margin-top: 25px;">📋 รายละเอียดการจอง</h3>
+            <div class="info-row">
+              <span class="label">กิจกรรม:</span>
+              <span class="value">${activityName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">ห้องประชุม:</span>
+              <span class="value">${roomName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">วันที่:</span>
+              <span class="value">${new Date(bookingDate).toLocaleDateString('th-TH')}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">เวลา:</span>
+              <span class="value">${startTime} - ${endTime}</span>
+            </div>
+            
+            <p style="margin-top: 30px; padding: 15px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px;">
+              📌 ระบบจะส่งอีเมลแจ้งเตือนคุณอีกครั้งเมื่อแอดมินดำเนินการอนุมัติการจองนี้แล้ว
+            </p>
+          </div>
+          <div class="footer">
+            <p>© 2026 Meeting Room Booking System</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const info = await transporter.sendMail({
+      from: `"ระบบจองห้องประชุม" <${process.env.GMAIL_USER || adminEmail}>`,
+      to: userEmail,
+      subject: `⏳ รอการอนุมัติ - การจองห้องประชุม ${activityName}`,
+      html: htmlContent,
+    });
+
+    console.log('✅ Email sent to user (confirmation):', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Failed to send user confirmation email:', error);
     throw error;
   }
 }
@@ -169,15 +260,15 @@ export async function sendApprovalNotificationToUser(data: EmailNotificationData
       </html>
     `;
 
-    const response = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    const info = await transporter.sendMail({
+      from: `"ระบบจองห้องประชุม" <${process.env.GMAIL_USER || adminEmail}>`,
       to: userEmail,
       subject: `✅ การจองของคุณอนุมัติแล้ว - ${activityName}`,
       html: htmlContent,
     });
 
-    console.log('✅ Email sent to user:', response);
-    return response;
+    console.log('✅ Email sent to user:', info.messageId);
+    return info;
   } catch (error) {
     console.error('❌ Failed to send user email:', error);
     throw error;
@@ -250,15 +341,15 @@ export async function sendCancellationNotificationToUser(data: EmailNotification
       </html>
     `;
 
-    const response = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    const info = await transporter.sendMail({
+      from: `"ระบบจองห้องประชุม" <${process.env.GMAIL_USER || adminEmail}>`,
       to: userEmail,
       subject: `❌ การจองของคุณถูกยกเลิก - ${activityName}`,
       html: htmlContent,
     });
 
-    console.log('✅ Email sent to user (cancellation):', response);
-    return response;
+    console.log('✅ Email sent to user (cancellation):', info.messageId);
+    return info;
   } catch (error) {
     console.error('❌ Failed to send cancellation email:', error);
     throw error;
