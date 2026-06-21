@@ -69,7 +69,7 @@ export default function Home() {
                 จองห้องประชุมออนไลน์ ได้ง่าย ๆ ในไม่กี่คลิก
               </h1>
               <p className="text-xs sm:text-sm text-indigo-100 font-medium max-w-lg leading-relaxed">
-                ระบบจัดการจองห้องประชุมอัจฉริยะ ค้นหาช่วงเวลาว่าง ตรวจสอบสถานะการจองได้ทันที รองรับทั้งคอมพิวเตอร์และมือถืออย่างสมบูรณ์แบบ
+                ระบบจัดการจองห้องประชุมเเละค้นหาช่วงเวลาว่าง ตรวจสอบสถานะการจองได้ทันที
               </p>
             </div>
 
@@ -139,7 +139,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              
+
               <Calendar bookings={bookings} />
             </section>
           </div>

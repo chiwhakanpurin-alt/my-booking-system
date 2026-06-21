@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ระบบจองห้องประชุม (PR Rooms Booking System)",
-  description: "ระบบจองห้องประชุมออนไลน์ ทันสมัย ใช้งานง่าย ค้นหาและจองห้องประชุมได้ทันที",
+  description: "ระบบจองห้องประชุมออนไลน์ ค้นหาและจองห้องประชุมได้ทันที",
 };
 
 export default function RootLayout({
