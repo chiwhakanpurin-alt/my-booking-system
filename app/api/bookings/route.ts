@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { activity_name, booked_by, email, room_name, booking_date, start_time, end_time, details } = body;
+    const { activity_name, booked_by, room_name, booking_date, start_time, end_time, details } = body;
 
     // Server-side validations (Security: Prevent client-side manipulation, protect DB)
     if (!activity_name?.trim()) {
@@ -49,14 +49,6 @@ export async function POST(request: Request) {
     }
     if (!booked_by?.trim()) {
       return NextResponse.json({ success: false, message: 'กรุณาระบุชื่อผู้จอง' }, { status: 400 });
-    }
-    if (!email?.trim()) {
-      return NextResponse.json({ success: false, message: 'กรุณาระบุอีเมล' }, { status: 400 });
-    }
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ success: false, message: 'อีเมลไม่ถูกต้อง' }, { status: 400 });
     }
     if (!room_name) {
       return NextResponse.json({ success: false, message: 'กรุณาเลือกห้องประชุม' }, { status: 400 });
@@ -77,7 +69,6 @@ export async function POST(request: Request) {
     const cleanActivity = activity_name.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanBookedBy = booked_by.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanDetails = details ? details.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
-    const cleanEmail = email.trim().toLowerCase();
 
     let pushSubString = '';
     if (body.pushSubscription) {
@@ -85,8 +76,8 @@ export async function POST(request: Request) {
     }
 
     const combinedDetails = cleanDetails 
-      ? `อีเมลผู้จอง: ${cleanEmail}\n\n${cleanDetails}${pushSubString}`
-      : `อีเมลผู้จอง: ${cleanEmail}${pushSubString}`;
+      ? `${cleanDetails}${pushSubString}`
+      : `${pushSubString}`.trim();
 
     const newBooking = {
       activity_name: cleanActivity,

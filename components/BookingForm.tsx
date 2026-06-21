@@ -17,7 +17,6 @@ export default function BookingForm() {
   const [formData, setFormData] = useState({
     activity_name: '',
     booked_by: '',
-    email: '',
     room_name: '',
     booking_date: '',
     start_time: '',
@@ -43,10 +42,6 @@ export default function BookingForm() {
     }
     if (!formData.booked_by.trim()) {
       toast.error('กรุณากรอกชื่อผู้จอง');
-      return;
-    }
-    if (!formData.email.trim()) {
-      toast.error('กรุณากรอกอีเมล');
       return;
     }
     if (!formData.room_name) {
@@ -132,7 +127,6 @@ export default function BookingForm() {
         setFormData({
           activity_name: '',
           booked_by: '',
-          email: '',
           room_name: '',
           booking_date: '',
           start_time: '',
@@ -223,26 +217,6 @@ export default function BookingForm() {
                 className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm"
               />
               <User className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="space-y-1.5">
-            <label htmlFor="email" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
-              อีเมล <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="เช่น your-email@example.com (สำหรับรับแจ้งเตือน)"
-                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm"
-              />
-              <Mail className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
             </div>
           </div>
 
