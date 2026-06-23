@@ -19,6 +19,14 @@ export default function InAppBrowserWarning() {
     }
     
     if (ua.indexOf('Line') > -1) {
+      // For LINE: We can force it to open in external browser automatically by appending ?openExternalBrowser=1
+      if (urlParams.get('openExternalBrowser') !== '1') {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('openExternalBrowser', '1');
+        window.location.href = newUrl.toString();
+        // Don't set state yet, let it redirect
+        return;
+      }
       setIsInApp(true);
       setAppType('LINE');
     } else if (ua.indexOf('FBAV') > -1 || ua.indexOf('FBAN') > -1) {
