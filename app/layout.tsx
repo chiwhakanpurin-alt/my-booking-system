@@ -4,6 +4,7 @@ import "./globals.css";
 import FeedbackButton from "@/components/FeedbackButton";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import Footer from "@/components/Footer";
+import InAppBrowserWarning from "@/components/InAppBrowserWarning";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         {children}
         <FeedbackButton />
         <ServiceWorkerRegister />
+        <InAppBrowserWarning />
         <Footer />
       </body>
     </html>
