@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { rateLimit, getIP } from '@/lib/rate-limit';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
 const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@booking.com';
 
 export async function POST(request: Request) {
@@ -51,12 +58,14 @@ export async function POST(request: Request) {
       </html>
     `;
 
-    await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    const mailOptions = {
+      from: `"PR Rooms System" <${process.env.GMAIL_USER}>`,
       to: adminEmail,
       subject: `🚨 รายงานปัญหา: ${message.substring(0, 30)}...`,
       html: htmlContent,
-    });
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true, message: 'ส่งรายงานสำเร็จ' }, { status: 200 });
   } catch (error) {

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import DashboardStats from '@/components/DashboardStats';
+import RoomUsageStats from '@/components/RoomUsageStats';
 import Calendar from '@/components/Calendar';
 import BookingStatusWatcher from '@/components/BookingStatusWatcher';
 import { CalendarPlus, ShieldAlert, Loader2, ArrowRight } from 'lucide-react';
@@ -58,18 +59,18 @@ export default function Home() {
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
         {/* Welcome Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 sm:p-10 shadow-lg shadow-indigo-500/10">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 text-white p-6 sm:p-10 shadow-lg shadow-pink-400/20">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] opacity-20"></div>
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 backdrop-blur-md text-indigo-200 uppercase tracking-wider">
-                PR Rooms Booking System
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md text-white uppercase tracking-wider">
+                โรงเรียนพรหมคีรีพิทยาคม
               </span>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-                จองห้องประชุมออนไลน์ ได้ง่าย ๆ ในไม่กี่คลิก
+                จองห้องประชุมออนไลน์
               </h1>
-              <p className="text-xs sm:text-sm text-indigo-100 font-medium max-w-lg leading-relaxed">
-                ระบบจัดการจองห้องประชุมเเละค้นหาช่วงเวลาว่าง ตรวจสอบสถานะการจองได้ทันที
+              <p className="text-xs sm:text-sm text-pink-50 font-medium max-w-lg leading-relaxed">
+                Meeting Room Booking System for Phromkiripittayakhom School
               </p>
             </div>
 
@@ -77,7 +78,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <Link
                 href="/book"
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-slate-900/10 transition-all text-sm cursor-pointer"
+                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-pink-500 font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-slate-900/10 transition-all text-sm cursor-pointer"
               >
                 <CalendarPlus className="h-4.5 w-4.5" />
                 จองห้องประชุม
@@ -114,6 +115,11 @@ export default function Home() {
             {/* Dashboard metrics at the top */}
             <section aria-label="Dashboard Statistics">
               <DashboardStats bookings={bookings} totalRooms={3} />
+            </section>
+
+            {/* Room Usage Statistics */}
+            <section aria-label="Room Usage Statistics">
+              <RoomUsageStats bookings={bookings} />
             </section>
 
             {/* Interactive monthly calendar */}

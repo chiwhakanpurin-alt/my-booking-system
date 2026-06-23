@@ -67,7 +67,7 @@ export default function Navbar() {
           
           {/* Logo Section */}
           <Link href="/" className="flex items-center gap-2.5 group transition">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform duration-200">
               <CalendarDays className="h-5.5 w-5.5" />
             </div>
             <div>

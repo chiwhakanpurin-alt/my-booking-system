@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { useToast, ToastContainer } from '@/components/Toast';
 
 const MEETING_ROOMS = [
-  'ห้องประชุมปบายน้ำ (ขนาดใหญ่ 50 ที่นั่ง)',
-  'ห้องประชุมพรหมโลก (ขนาดกลาง 20 ที่นั่ง)',
-  'ห้องประชุมอ้ายเขียว (ขนาดเล็ก 10 ที่นั่ง)',
+  'ห้องประชุมปลายน้ำ',
+  'ห้องประชุมพรหมโลก',
+  'ห้องประชุมอ้ายเขียว',
 ];
 
 export default function BookingForm() {
@@ -77,7 +77,7 @@ export default function BookingForm() {
         for (let i = 0; i < rawData.length; ++i) {
           outputArray[i] = rawData.charCodeAt(i);
         }
-        
+
         const existingSub = await registration.pushManager.getSubscription();
         if (existingSub) return existingSub;
 
@@ -165,7 +165,7 @@ export default function BookingForm() {
 
       <div className="rounded-3xl glass-panel shadow-xl border border-slate-200/50 dark:border-zinc-800/40 p-6 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/15">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-md shadow-pink-500/15">
             <CalendarDays className="h-5.5 w-5.5" />
           </div>
           <div>
@@ -194,7 +194,7 @@ export default function BookingForm() {
                 value={formData.activity_name}
                 onChange={handleChange}
                 placeholder="เช่น ประชุมสรุปโปรเจกต์ประจำสัปดาห์"
-                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm"
+                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
               />
               <FileText className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
             </div>
@@ -214,7 +214,7 @@ export default function BookingForm() {
                 value={formData.booked_by}
                 onChange={handleChange}
                 placeholder="เช่น สมชาย ใจดี (089-xxxxxxx)"
-                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm"
+                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
               />
               <User className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
             </div>
@@ -232,7 +232,7 @@ export default function BookingForm() {
                 required
                 value={formData.room_name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm appearance-none cursor-pointer"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm appearance-none cursor-pointer"
               >
                 <option value="" disabled className="dark:bg-zinc-900">-- กรุณาเลือกห้องประชุม --</option>
                 {MEETING_ROOMS.map((room, idx) => (
@@ -257,7 +257,7 @@ export default function BookingForm() {
               required
               value={formData.booking_date}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm cursor-pointer"
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
             />
           </div>
 
@@ -276,7 +276,7 @@ export default function BookingForm() {
                   required
                   value={formData.start_time}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm cursor-pointer"
+                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
                 />
                 <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
               </div>
@@ -295,7 +295,7 @@ export default function BookingForm() {
                   required
                   value={formData.end_time}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm cursor-pointer"
+                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
                 />
                 <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
               </div>
@@ -314,7 +314,7 @@ export default function BookingForm() {
               value={formData.details}
               onChange={handleChange}
               placeholder="ระบุสิ่งที่ต้องการเตรียมเพิ่มเติม เช่น โทรทัศน์โปรเจคเตอร์, อาหารว่าง หรือรูปแบบการจัดห้อง"
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-sm resize-y"
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm resize-y"
             />
           </div>
 
@@ -322,7 +322,7 @@ export default function BookingForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-indigo-600/10 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold hover:from-pink-600 hover:to-rose-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-pink-500/10 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
           >
             {loading ? (
               <>

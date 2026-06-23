@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Clock, User, DoorOpen, Calendar as CalendarIcon, Info } from 'lucide-react';
 
 interface Booking {
@@ -30,6 +31,23 @@ export default function Calendar({ bookings }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateBookings, setSelectedDateBookings] = useState<Booking[] | null>(null);
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedDateBookings !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedDateBookings]);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -223,14 +241,14 @@ export default function Calendar({ bookings }: CalendarProps) {
         </div>
       </div>
 
-      {/* Booking Details Popover/Bubble Overlay */}
-      {selectedDateBookings !== null && selectedDateStr !== null && (
+      {/* Booking Details Popover/Bubble Overlay via Portal */}
+      {selectedDateBookings !== null && selectedDateStr !== null && mounted && createPortal(
         <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in-scale backdrop-blur-overlay"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in-scale backdrop-blur-overlay bg-slate-900/60 dark:bg-black/80"
         onClick={closePopover}
       >
           <div
-            className="w-full max-w-lg overflow-hidden rounded-3xl glass-modal shadow-2xl p-6 animate-fade-in-scale text-slate-900 dark:text-zinc-100"
+            className="w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-3xl glass-modal bg-white/98 dark:bg-zinc-900/98 shadow-2xl p-6 animate-fade-in-scale text-slate-900 dark:text-zinc-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Popover Header */}
@@ -337,7 +355,8 @@ export default function Calendar({ bookings }: CalendarProps) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
