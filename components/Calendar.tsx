@@ -332,10 +332,10 @@ export default function Calendar({ bookings }: CalendarProps) {
                           </div>
                         </div>
 
-                        {booking.details && (
+                        {booking.details && booking.details.split('---PUSH_SUB---')[0].trim() && (
                           <div className="mt-2.5 pt-2 border-t border-slate-200/40 dark:border-zinc-700/30 flex items-start gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
                             <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
-                            <span>รายละเอียด: {booking.details}</span>
+                            <span className="break-words w-full">รายละเอียด: {booking.details.split('---PUSH_SUB---')[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim()}</span>
                           </div>
                         )}
                       </div>
