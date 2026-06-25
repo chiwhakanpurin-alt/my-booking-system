@@ -71,11 +71,8 @@ export default function Navbar() {
               <CalendarDays className="h-5.5 w-5.5" />
             </div>
             <div>
-              <span className="block font-bold tracking-tight bg-gradient-to-r from-slate-900 to-indigo-950 dark:from-white dark:to-indigo-200 bg-clip-text text-transparent text-base sm:text-lg">
-                PR Room
-              </span>
-              <span className="block text-[10px] text-slate-500 dark:text-zinc-400 font-medium tracking-wider -mt-1 uppercase">
-                Booking System
+              <span className="block font-bold tracking-tight bg-gradient-to-r from-slate-900 to-indigo-950 dark:from-white dark:to-indigo-200 bg-clip-text text-transparent text-xs sm:text-sm md:text-base">
+                Meeting Room Booking System for Phromkiripittayakhom School
               </span>
             </div>
           </Link>
