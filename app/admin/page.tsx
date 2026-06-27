@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     isOpen: boolean;
     details: string;
     activityName: string;
+    contactInfo?: string;
   } | null>(null);
 
   const fetchBookings = async () => {
@@ -323,7 +324,8 @@ export default function AdminDashboard() {
                                 onClick={() => setDetailsModal({
                                   isOpen: true,
                                   details: cleanDetails,
-                                  activityName: booking.activity_name
+                                  activityName: booking.activity_name,
+                                  contactInfo: contactInfo
                                 })}
                                 className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer"
                               >
@@ -496,10 +498,19 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800/80">
-                <p className="text-sm text-slate-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                  {detailsModal.details}
-                </p>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800/80 space-y-3">
+                {detailsModal.contactInfo && (
+                  <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-zinc-300">
+                    <span className="font-bold text-slate-900 dark:text-white">เบอร์โทรศัพท์ติดต่อ:</span>
+                    <a href={`tel:${detailsModal.contactInfo}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">
+                      {detailsModal.contactInfo}
+                    </a>
+                  </div>
+                )}
+                <div className="text-sm text-slate-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                  <span className="font-bold text-slate-900 dark:text-white block mb-1">รายละเอียดเพิ่มเติม:</span>
+                  {detailsModal.details || '-'}
+                </div>
               </div>
 
               <div className="pt-2">
