@@ -7,7 +7,7 @@ import DashboardStats from '@/components/DashboardStats';
 import RoomUsageStats from '@/components/RoomUsageStats';
 import Calendar from '@/components/Calendar';
 import BookingStatusWatcher from '@/components/BookingStatusWatcher';
-import { CalendarPlus, ShieldAlert, Loader2, ArrowRight } from 'lucide-react';
+import { CalendarPlus, ShieldAlert, Loader2, ArrowRight, BookOpen, X } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -25,6 +25,7 @@ export default function Home() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const fetchBookings = async () => {
     try {
@@ -76,6 +77,13 @@ export default function Home() {
 
             {/* Quick Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <button
+                onClick={() => setIsGuideModalOpen(true)}
+                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold backdrop-blur-md border border-white/30 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm cursor-pointer shadow-lg shadow-pink-500/20"
+              >
+                <BookOpen className="h-4.5 w-4.5" />
+                คู่มือการใช้งาน
+              </button>
               <Link
                 href="/book"
                 className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-pink-500 font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-slate-900/10 transition-all text-sm cursor-pointer"
@@ -151,6 +159,55 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Guide Modal */}
+      {isGuideModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div 
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60 transition-opacity" 
+            onClick={() => setIsGuideModalOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 z-20">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-pink-500" />
+                คู่มือการใช้งานระบบจองห้องประชุม
+              </h2>
+              <button 
+                onClick={() => setIsGuideModalOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50 dark:bg-zinc-950/50 space-y-6">
+              <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-zinc-800">
+                <img 
+                  src="/guide1.png" 
+                  alt="คู่มือการจองหน้า 1" 
+                  className="w-full h-auto rounded-xl"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/800x1131/ffcce6/ec4899?text=Please+upload+guide1.png+to+public+folder';
+                  }}
+                />
+              </div>
+              <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-zinc-800">
+                <img 
+                  src="/guide2.png" 
+                  alt="คู่มือการจองหน้า 2" 
+                  className="w-full h-auto rounded-xl"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/800x1131/ffcce6/ec4899?text=Please+upload+guide2.png+to+public+folder';
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

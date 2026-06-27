@@ -66,14 +66,13 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           
           {/* Logo Section */}
-          <Link href="/" className="flex items-center gap-2.5 group transition">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform duration-200">
-              <CalendarDays className="h-5.5 w-5.5" />
-            </div>
-            <div>
-              <span className="block font-bold tracking-tight bg-gradient-to-r from-slate-900 to-indigo-950 dark:from-white dark:to-indigo-200 bg-clip-text text-transparent text-xs sm:text-sm md:text-base">
-                Meeting Room Booking System for Phromkiripittayakhom School
-              </span>
+          <Link href="/" className="flex items-center group transition">
+            <div className="relative h-11 w-11 sm:h-12 sm:w-12 overflow-hidden rounded-full shadow-sm shadow-slate-200 dark:shadow-zinc-900 group-hover:scale-105 transition-transform duration-200 flex items-center justify-center">
+              <img 
+                src="/school-logo.png" 
+                alt="School Logo" 
+                className="h-full w-full object-cover"
+              />
             </div>
           </Link>
 

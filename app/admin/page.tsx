@@ -293,13 +293,19 @@ export default function AdminDashboard() {
                         statusBadge = 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-900/25';
                         statusText = 'รออนุมัติ';
                       } else if (isCancelled) {
-                        statusBadge = 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/25';
-                        statusText = 'ยกเลิก';
+                        statusBadge = 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800/30';
+                        statusText = 'ยกเลิกแล้ว';
                       }
 
                       let cleanDetails = '';
+                      let contactInfo = '';
                       if (booking.details) {
-                        cleanDetails = booking.details.split('---PUSH_SUB---')[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim();
+                        const noPushSub = booking.details.split('---PUSH_SUB---')[0];
+                        const contactSplit = noPushSub.split('---CONTACT_INFO---');
+                        cleanDetails = contactSplit[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim();
+                        if (contactSplit.length > 1) {
+                          contactInfo = contactSplit[1].trim();
+                        }
                       }
 
                       return (
@@ -326,8 +332,15 @@ export default function AdminDashboard() {
                             )}
                           </td>
                           {/* Booked by */}
-                          <td className="px-5 py-4 font-medium text-slate-700 dark:text-zinc-300">
-                            {booking.booked_by}
+                          <td className="px-5 py-4">
+                            <div className="font-medium text-slate-700 dark:text-zinc-300">
+                              {booking.booked_by}
+                            </div>
+                            {contactInfo && (
+                              <div className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">
+                                โทร: {contactInfo}
+                              </div>
+                            )}
                           </td>
                           {/* Room Name */}
                           <td className="px-5 py-4 text-slate-700 dark:text-zinc-300 font-semibold">

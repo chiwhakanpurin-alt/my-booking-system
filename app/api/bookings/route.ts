@@ -12,15 +12,53 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY || ''
 );
 
+import { cookies } from 'next/headers';
+import { verifyJWT } from '@/lib/jwt';
+
 // GET: Fetch all bookings (ordered by booking_date and start_time)
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data, error } = await supabase
+    // Security: Rate limiting for GET requests (e.g. 60 requests per minute)
+    const ip = getIP(request);
+    const { success } = rateLimit(ip, 60, 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { success: false, message: 'Too many requests' },
+        { status: 429 }
+      );
+    }
+
+    // Check if requester is admin
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('admin_session');
+    let isAdmin = false;
+
+    if (sessionCookie) {
+      try {
+        const jwtSecret = process.env.JWT_SECRET || 'super_secret_for_meeting_room_booking_2026_system';
+        const payload = await verifyJWT(sessionCookie.value, jwtSecret);
+        if (payload && payload.role === 'admin') {
+          isAdmin = true;
+        }
+      } catch (e) {
+        // invalid token, ignore
+      }
+    }
+
+    // Security: Do NOT select 'details' column to prevent PII exposure (emails, phones)
+    let query = supabase
       .from('bookings')
-      .select('*')
+      .select('id, activity_name, booked_by, room_name, booking_date, start_time, end_time, status, created_at')
       .neq('activity_name', 'ADMIN_SUBSCRIPTION')
       .order('booking_date', { ascending: true })
       .order('start_time', { ascending: true });
+
+    // Hide cancelled bookings from public view, but let admins see them for record keeping
+    if (!isAdmin) {
+      query = query.neq('status', 'ยกเลิก');
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -50,7 +88,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { activity_name, booked_by, room_name, booking_date, start_time, end_time, details } = body;
+    const { activity_name, booked_by, contact_info, room_name, booking_date, start_time, end_time, details } = body;
 
     // Server-side validations (Security: Prevent client-side manipulation, protect DB)
     if (!activity_name?.trim()) {
@@ -58,6 +96,9 @@ export async function POST(request: Request) {
     }
     if (!booked_by?.trim()) {
       return NextResponse.json({ success: false, message: 'กรุณาระบุชื่อผู้จอง' }, { status: 400 });
+    }
+    if (!contact_info?.trim()) {
+      return NextResponse.json({ success: false, message: 'กรุณาระบุเบอร์ติดต่อ' }, { status: 400 });
     }
     if (!room_name) {
       return NextResponse.json({ success: false, message: 'กรุณาเลือกห้องประชุม' }, { status: 400 });
@@ -77,6 +118,7 @@ export async function POST(request: Request) {
     // Sanitize input to prevent basic XSS
     const cleanActivity = activity_name.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanBookedBy = booked_by.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    const cleanContact = contact_info.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanDetails = details ? details.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
 
     let pushSubString = '';
@@ -84,9 +126,14 @@ export async function POST(request: Request) {
       pushSubString = `\n\n---PUSH_SUB---\n${JSON.stringify(body.pushSubscription)}`;
     }
 
+    let contactInfoString = '';
+    if (cleanContact) {
+      contactInfoString = `\n\n---CONTACT_INFO---\n${cleanContact}`;
+    }
+
     const combinedDetails = cleanDetails 
-      ? `${cleanDetails}${pushSubString}`
-      : `${pushSubString}`.trim();
+      ? `${cleanDetails}${contactInfoString}${pushSubString}`
+      : `${contactInfoString}${pushSubString}`.trim();
 
     const newBooking = {
       activity_name: cleanActivity,

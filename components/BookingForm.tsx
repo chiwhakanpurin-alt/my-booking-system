@@ -17,6 +17,7 @@ export default function BookingForm() {
   const [formData, setFormData] = useState({
     activity_name: '',
     booked_by: '',
+    contact_info: '',
     room_name: '',
     booking_date: '',
     start_time: '',
@@ -42,6 +43,10 @@ export default function BookingForm() {
     }
     if (!formData.booked_by.trim()) {
       toast.error('กรุณากรอกชื่อผู้จอง');
+      return;
+    }
+    if (!formData.contact_info.trim()) {
+      toast.error('กรุณากรอกเบอร์ติดต่อ');
       return;
     }
     if (!formData.room_name) {
@@ -127,6 +132,7 @@ export default function BookingForm() {
         setFormData({
           activity_name: '',
           booked_by: '',
+          contact_info: '',
           room_name: '',
           booking_date: '',
           start_time: '',
@@ -203,7 +209,7 @@ export default function BookingForm() {
           {/* Booked By */}
           <div className="space-y-1.5">
             <label htmlFor="booked_by" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
-              ชื่อผู้จอง / เบอร์ติดต่อ <span className="text-rose-500">*</span>
+              ชื่อผู้จอง <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -213,10 +219,30 @@ export default function BookingForm() {
                 required
                 value={formData.booked_by}
                 onChange={handleChange}
-                placeholder="เช่น สมชาย ใจดี (089-xxxxxxx)"
+                placeholder="เช่น สมชาย ใจดี"
                 className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
               />
               <User className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
+            </div>
+          </div>
+
+          {/* Contact Info */}
+          <div className="space-y-1.5">
+            <label htmlFor="contact_info" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+              เบอร์ติดต่อ <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="contact_info"
+                name="contact_info"
+                type="text"
+                required
+                value={formData.contact_info}
+                onChange={handleChange}
+                placeholder="เช่น 089-xxxxxxx"
+                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
+              />
+              <Mail className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
             </div>
           </div>
 

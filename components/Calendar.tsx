@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, X, Clock, User, DoorOpen, Calendar as CalendarIcon, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Clock, User, DoorOpen, Calendar as CalendarIcon, Loader2, AlertCircle } from 'lucide-react';
+import { useToast, ToastContainer } from '@/components/Toast';
 
 interface Booking {
   id: string;
@@ -32,6 +33,19 @@ export default function Calendar({ bookings }: CalendarProps) {
   const [selectedDateBookings, setSelectedDateBookings] = useState<Booking[] | null>(null);
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  
+  // Toast & Change Request State
+  const { toasts, toast, dismissToast } = useToast();
+  const [requestModal, setRequestModal] = useState<{
+    isOpen: boolean;
+    booking: Booking | null;
+    contactInfo: string;
+  }>({
+    isOpen: false,
+    booking: null,
+    contactInfo: ''
+  });
+  const [loadingRequest, setLoadingRequest] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -39,7 +53,7 @@ export default function Calendar({ bookings }: CalendarProps) {
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (selectedDateBookings !== null) {
+    if (selectedDateBookings !== null || requestModal.isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -47,7 +61,7 @@ export default function Calendar({ bookings }: CalendarProps) {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedDateBookings]);
+  }, [selectedDateBookings, requestModal.isOpen]);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -78,9 +92,6 @@ export default function Calendar({ bookings }: CalendarProps) {
     const month = isCurrentMonth ? currentMonth : (day > 20 ? currentMonth - 1 : currentMonth + 1);
     const dateStr = formatDateString(year, month, day);
 
-    // Get bookings for this date (excluding cancelled ones from counts but we can show them or filter them out)
-    // The instructions say: "ซ่อนจากรายการอนุมัติ" for cancelled items, but "แสดงสถานะการจอง (รออนุมัติ / อนุมัติแล้ว / ยกเลิก) ใน Popup"
-    // So we fetch all bookings for this date.
     const dayBookings = bookings.filter((b) => b.booking_date === dateStr);
     
     setSelectedDateBookings(dayBookings);
@@ -105,28 +116,60 @@ export default function Calendar({ bookings }: CalendarProps) {
     return `${day} ${month} ${year}`;
   };
 
+  const handleSubmitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestModal.booking) return;
+
+    if (!requestModal.contactInfo.trim()) {
+      toast.error('กรุณากรอกเบอร์ติดต่อ');
+      return;
+    }
+
+    try {
+      setLoadingRequest(true);
+      const res = await fetch('/api/bookings/request-change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: requestModal.booking.id,
+          contactInfo: requestModal.contactInfo
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('ยกเลิกการจองสำเร็จ', 'รายการจองถูกยกเลิกแล้ว', 4000);
+        setRequestModal({ ...requestModal, isOpen: false, contactInfo: '' });
+        // Optionally, refresh bookings here if possible, or wait for polling.
+      } else {
+        toast.error('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถส่งคำขอได้');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+    } finally {
+      setLoadingRequest(false);
+    }
+  };
+
   // Generate day cells
   const dayCells = [];
 
-  // Previous month padding days
   for (let i = firstDayOfMonth - 1; i >= 0; i--) {
     const day = daysInPrevMonth - i;
     dayCells.push({ day, isCurrentMonth: false, monthOffset: -1 });
   }
 
-  // Current month days
   for (let i = 1; i <= daysInMonth; i++) {
     dayCells.push({ day: i, isCurrentMonth: true, monthOffset: 0 });
   }
 
-  // Next month padding days to make grid full multiples of 7 (usually 35 or 42 cells)
   const totalCellsNeeded = dayCells.length > 35 ? 42 : 35;
   const nextMonthDaysNeeded = totalCellsNeeded - dayCells.length;
   for (let i = 1; i <= nextMonthDaysNeeded; i++) {
     dayCells.push({ day: i, isCurrentMonth: false, monthOffset: 1 });
   }
 
-  // Check if today matches
   const isToday = (day: number) => {
     const today = new Date();
     return today.getDate() === day && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
@@ -134,6 +177,8 @@ export default function Calendar({ bookings }: CalendarProps) {
 
   return (
     <div className="w-full">
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      
       {/* Calendar Card */}
       <div className="rounded-3xl glass-panel shadow-lg border border-slate-200/50 dark:border-zinc-800/40 p-4 sm:p-6">
         
@@ -274,18 +319,23 @@ export default function Calendar({ bookings }: CalendarProps) {
 
             {/* Popover Content */}
             <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-              {/* Daily Count summary */}
-              <div className="bg-indigo-50/70 dark:bg-indigo-950/20 rounded-xl p-3.5 border border-indigo-200/50 dark:border-indigo-900/30 text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                มีห้องประชุมถูกจองทั้งหมด {selectedDateBookings.filter(b => b.status !== 'ยกเลิก').length} รายการในวันนึ้
-              </div>
+              {(() => {
+                const validBookings = selectedDateBookings.filter(b => b.status !== 'ยกเลิก');
+                
+                return (
+                  <>
+                    {/* Daily Count summary */}
+                    <div className="bg-indigo-50/70 dark:bg-indigo-950/20 rounded-xl p-3.5 border border-indigo-200/50 dark:border-indigo-900/30 text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                      มีห้องประชุมถูกจองทั้งหมด {validBookings.length} รายการในวันนึ้
+                    </div>
 
-              {selectedDateBookings.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 dark:text-zinc-500 text-sm">
-                  ไม่มีการจองห้องประชุมในวันนี้
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedDateBookings.map((booking, idx) => {
+                    {validBookings.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500 dark:text-zinc-500 text-sm">
+                        ไม่มีการจองห้องประชุมในวันนี้
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {validBookings.map((booking, idx) => {
                     const isApproved = booking.status === 'อนุมัติแล้ว' || booking.status === 'approved';
                     const isPending = booking.status === 'รออนุมัติ' || booking.status === 'pending';
                     const isCancelled = booking.status === 'ยกเลิก' || booking.status === 'cancelled';
@@ -299,8 +349,8 @@ export default function Calendar({ bookings }: CalendarProps) {
                       badgeColor = 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-900/25';
                       statusLabel = 'รออนุมัติ';
                     } else if (isCancelled) {
-                      badgeColor = 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/25';
-                      statusLabel = 'ยกเลิก';
+                      badgeColor = 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30';
+                      statusLabel = 'ยกเลิกแล้ว';
                     }
 
                     return (
@@ -331,11 +381,33 @@ export default function Calendar({ bookings }: CalendarProps) {
                             <span>ผู้จอง: <strong className="text-slate-800 dark:text-zinc-200">{booking.booked_by}</strong></span>
                           </div>
                         </div>
+                        
+                        {/* Action buttons to request reschedule/cancel */}
+                        {!isCancelled && (
+                          <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-zinc-700/50 flex justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setRequestModal({
+                                  isOpen: true,
+                                  booking,
+                                  contactInfo: ''
+                                });
+                                closePopover();
+                              }}
+                              className="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                            >
+                              ยกเลิกการจอง
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
-                </div>
-              )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Popover Footer */}
@@ -347,6 +419,65 @@ export default function Calendar({ bookings }: CalendarProps) {
                 ตกลง
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Request Change Modal Overlay via Portal */}
+      {requestModal.isOpen && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-fade-in backdrop-blur-overlay bg-slate-900/60 dark:bg-black/80"
+          onClick={() => setRequestModal({ ...requestModal, isOpen: false })}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-3xl glass-modal bg-white dark:bg-zinc-900 shadow-2xl p-6 text-slate-800 dark:text-zinc-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4 text-rose-500">
+              <AlertCircle className="h-6 w-6" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                ยกเลิกการจอง
+              </h3>
+            </div>
+            
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-5">
+              กรุณากรอกเบอร์โทรศัพท์ที่ใช้ในการจองให้ถูกต้อง เพื่อยกเลิกการจองนี้
+            </p>
+            
+            <form onSubmit={handleSubmitRequest} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                  เบอร์โทรศัพท์ยืนยันตัวตน *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={requestModal.contactInfo}
+                  onChange={(e) => setRequestModal({ ...requestModal, contactInfo: e.target.value })}
+                  placeholder="เช่น 089-xxxxxxx"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-sm focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 outline-none transition"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  disabled={loadingRequest}
+                  onClick={() => setRequestModal({ ...requestModal, isOpen: false })}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition text-sm cursor-pointer disabled:opacity-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={loadingRequest}
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition text-sm flex justify-center items-center gap-2 cursor-pointer disabled:opacity-75 disabled:pointer-events-none shadow-md shadow-indigo-600/20"
+                >
+                  {loadingRequest ? <Loader2 className="h-4 w-4 animate-spin" /> : 'ยืนยันยกเลิก'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body

@@ -355,3 +355,106 @@ export async function sendCancellationNotificationToUser(data: EmailNotification
     throw error;
   }
 }
+
+export interface ChangeRequestData {
+  bookingId: string;
+  activityName: string;
+  bookedBy: string;
+  roomName: string;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
+  requestType: 'reschedule' | 'cancel';
+  reason: string;
+  contactInfo: string;
+}
+
+// 📧 Send change request notification to admin
+export async function sendChangeRequestNotificationToAdmin(data: ChangeRequestData) {
+  try {
+    const { activityName, bookedBy, roomName, bookingDate, startTime, endTime, requestType, reason, contactInfo } = data;
+    
+    const requestTypeLabel = requestType === 'reschedule' ? 'ขอเลื่อนเวลา/วันที่' : 'ขอยกเลิกการจอง';
+    const headerColor = requestType === 'reschedule' ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="th">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: ${headerColor}; color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .info-row { display: flex; margin-bottom: 15px; }
+          .label { font-weight: bold; color: #4b5563; min-width: 120px; }
+          .value { color: #555; }
+          .highlight { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin-top: 20px; border-radius: 4px; }
+          .button { display: inline-block; margin-top: 20px; padding: 12px 30px; background: #4b5563; color: white; text-decoration: none; border-radius: 6px; }
+          .footer { text-align: center; margin-top: 20px; color: #999; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>⚠️ มีการแจ้ง${requestTypeLabel}</h1>
+          </div>
+          <div class="content">
+            <p>สวัสดีค่ะ</p>
+            <p>ผู้ใช้งานได้ส่งคำขอแจ้งเปลี่ยนแปลงข้อมูลการจองห้องประชุม</p>
+            
+            <div class="highlight">
+              <div class="info-row"><span class="label">ประเภทคำขอ:</span><span class="value" style="font-weight:bold;">${requestTypeLabel}</span></div>
+              <div class="info-row"><span class="label">เหตุผล/เวลาใหม่:</span><span class="value">${reason}</span></div>
+              <div class="info-row"><span class="label">ข้อมูลติดต่อกลับ:</span><span class="value">${contactInfo}</span></div>
+            </div>
+
+            <h3 style="color: #4b5563; margin-top: 25px;">📋 ข้อมูลการจองเดิม</h3>
+            <div class="info-row">
+              <span class="label">กิจกรรม:</span>
+              <span class="value">${activityName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">ผู้จองเดิม:</span>
+              <span class="value">${bookedBy}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">ห้องประชุม:</span>
+              <span class="value">${roomName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">วันที่เดิม:</span>
+              <span class="value">${new Date(bookingDate).toLocaleDateString('th-TH')}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">เวลาเดิม:</span>
+              <span class="value">${startTime} - ${endTime}</span>
+            </div>
+            
+            <a href="https://booking.your-domain.com/admin" class="button">ไปที่ระบบจัดการเพื่อดำเนินการ</a>
+            
+          </div>
+          <div class="footer">
+            <p>© 2026 Meeting Room Booking System</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const info = await transporter.sendMail({
+      from: `"ระบบจองห้องประชุม" <${process.env.GMAIL_USER || adminEmail}>`,
+      to: adminEmail,
+      subject: `⚠️ คำขอ${requestTypeLabel} - ${activityName}`,
+      html: htmlContent,
+    });
+
+    console.log('✅ Email sent to admin (change request):', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Failed to send change request email to admin:', error);
+    throw error;
+  }
+}
