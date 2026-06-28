@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     // Passwords match! Sign JWT
     const jwtSecret = process.env.JWT_SECRET || 'super_secret_for_meeting_room_booking_2026_system';
-    const token = await signJWT({ role: 'admin' }, jwtSecret, 86400); // 1 day expiry
+    const token = await signJWT({ role: 'admin' }, jwtSecret, 604800); // 7 days expiry
 
     const response = NextResponse.json({ success: true, message: 'เข้าสู่ระบบสำเร็จ' });
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 86400, // 1 day
+      maxAge: 604800, // 7 days
       path: '/',
     });
 

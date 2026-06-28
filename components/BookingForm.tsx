@@ -281,6 +281,7 @@ export default function BookingForm() {
               name="booking_date"
               type="date"
               required
+              min={new Date().toLocaleDateString('en-CA')} // YYYY-MM-DD local timezone format
               value={formData.booking_date}
               onChange={handleChange}
               className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"

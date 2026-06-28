@@ -115,6 +115,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น' }, { status: 400 });
     }
 
+    // Date validation: Prevent booking in the past
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    if (booking_date < todayStr) {
+      return NextResponse.json({ success: false, message: 'ไม่สามารถจองห้องประชุมย้อนหลังได้' }, { status: 400 });
+    }
+
+    // Check for overlapping bookings
+    const { data: overlappingBookings, error: overlapError } = await supabase
+      .from('bookings')
+      .select('id, status')
+      .eq('room_name', room_name)
+      .eq('booking_date', booking_date)
+      .neq('status', 'ยกเลิก')
+      .lt('start_time', end_time)
+      .gt('end_time', start_time);
+
+    if (overlapError) {
+      console.error('Overlap check error:', overlapError);
+      return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการตรวจสอบห้องว่าง' }, { status: 500 });
+    }
+
+    if (overlappingBookings && overlappingBookings.length > 0) {
+      return NextResponse.json({ success: false, message: 'ห้องประชุมนี้มีการจองในช่วงเวลาดังกล่าวแล้ว' }, { status: 400 });
+    }
+
     // Sanitize input to prevent basic XSS
     const cleanActivity = activity_name.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanBookedBy = booked_by.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
