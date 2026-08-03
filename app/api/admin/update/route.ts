@@ -6,11 +6,17 @@ import { verifyJWT } from '@/lib/jwt';
 import { syncToGoogleSheets } from '@/lib/google-sheets';
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  'mailto:chiwhakanpurin@gmail.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
+try {
+  if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+      'mailto:chiwhakanpurin@gmail.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+  }
+} catch (e) {
+  console.warn('Failed to set VAPID details:', e);
+}
 
 export async function POST(request: Request) {
   try {

@@ -6,11 +6,17 @@ import { rateLimit, getIP } from '@/lib/rate-limit';
 import webpush from 'web-push';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-webpush.setVapidDetails(
-  'mailto:chiwhakanpurin@gmail.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
+try {
+  if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+      'mailto:chiwhakanpurin@gmail.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+  }
+} catch (e) {
+  console.warn('Failed to set VAPID details:', e);
+}
 
 import { cookies } from 'next/headers';
 import { verifyJWT } from '@/lib/jwt';
