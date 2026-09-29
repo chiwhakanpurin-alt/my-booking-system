@@ -51,10 +51,15 @@ export async function GET(request: Request) {
       }
     }
 
-    // Security: Do NOT select 'details' column to prevent PII exposure (emails, phones)
+    // Security: Do NOT select 'details' column to prevent PII exposure (emails, phones) for public
+    let selectFields = 'id, activity_name, booked_by, room_name, booking_date, start_time, end_time, status, created_at';
+    if (isAdmin) {
+      selectFields += ', details';
+    }
+
     let query = supabase
       .from('bookings')
-      .select('id, activity_name, booked_by, room_name, booking_date, start_time, end_time, status, created_at')
+      .select(selectFields)
       .neq('activity_name', 'ADMIN_SUBSCRIPTION')
       .order('booking_date', { ascending: true })
       .order('start_time', { ascending: true });

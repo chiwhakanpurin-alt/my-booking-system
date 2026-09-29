@@ -73,6 +73,7 @@ body {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -84,13 +85,35 @@ body {
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  15% { transform: rotate(-15deg); }
-  30% { transform: rotate(12deg); }
-  45% { transform: rotate(-10deg); }
-  60% { transform: rotate(8deg); }
-  75% { transform: rotate(-5deg); }
-  90% { transform: rotate(3deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(-15deg);
+  }
+
+  30% {
+    transform: rotate(12deg);
+  }
+
+  45% {
+    transform: rotate(-10deg);
+  }
+
+  60% {
+    transform: rotate(8deg);
+  }
+
+  75% {
+    transform: rotate(-5deg);
+  }
+
+  90% {
+    transform: rotate(3deg);
+  }
 }
 
 .dark .glass-modal {
@@ -102,8 +125,15 @@ body {
 
 /* Smooth fade animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .animate-fade-in {
@@ -127,4 +157,39 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.45);
+}
+
+/* 3D Cube Loader */
+.cube-wrapper {
+  perspective: 1000px;
+}
+
+.cube {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+  animation: spinCube 2.5s infinite linear;
+}
+
+.cube div {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.6), rgba(225, 29, 72, 0.6));
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.cube .front  { transform: translateZ(40px); }
+.cube .back   { transform: rotateY(180deg) translateZ(40px); }
+.cube .right  { transform: rotateY(90deg) translateZ(40px); }
+.cube .left   { transform: rotateY(-90deg) translateZ(40px); }
+.cube .top    { transform: rotateX(90deg) translateZ(40px); }
+.cube .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+@keyframes spinCube {
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
 }

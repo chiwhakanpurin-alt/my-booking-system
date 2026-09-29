@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,6 +103,7 @@ export default function AdminDashboard() {
   }, []);
 
   const handleActionClick = (bookingId: string, action: 'อนุมัติแล้ว' | 'ยกเลิก' | 'ลบ', activityName: string) => {
+    setCancelReason('');
     setConfirmModal({
       isOpen: true,
       bookingId,
@@ -125,6 +127,9 @@ export default function AdminDashboard() {
         endpoint = '/api/admin/delete';
       } else {
         body.status = action;
+        if (action === 'ยกเลิก') {
+          body.reason = cancelReason;
+        }
       }
 
       const res = await fetch(endpoint, {
@@ -335,14 +340,25 @@ export default function AdminDashboard() {
                           </td>
                           {/* Booked by */}
                           <td className="px-5 py-4">
-                            <div className="font-medium text-slate-700 dark:text-zinc-300">
-                              {booking.booked_by}
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-700 dark:text-zinc-300">
+                                {booking.booked_by}
+                              </span>
+                              {contactInfo && (
+                                <button
+                                  onClick={() => setDetailsModal({
+                                    isOpen: true,
+                                    details: cleanDetails,
+                                    activityName: booking.activity_name,
+                                    contactInfo: contactInfo
+                                  })}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer shrink-0"
+                                  title="ดูเบอร์ติดต่อ"
+                                >
+                                  ดูเบอร์ติดต่อ
+                                </button>
+                              )}
                             </div>
-                            {contactInfo && (
-                              <div className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">
-                                โทร: {contactInfo}
-                              </div>
-                            )}
                           </td>
                           {/* Room Name */}
                           <td className="px-5 py-4 text-slate-700 dark:text-zinc-300 font-semibold">
@@ -447,6 +463,21 @@ export default function AdminDashboard() {
                     ? `คุณต้องการยกเลิกรายการ "${confirmModal.activityName}" ใช่หรือไม่?`
                     : `คุณต้องการลบรายการ "${confirmModal.activityName}" ใช่หรือไม่?`}
                 </p>
+                {confirmModal.action === 'ยกเลิก' && (
+                  <div className="pt-3 text-left space-y-1.5">
+                    <label htmlFor="cancelReason" className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                      หมายเหตุการยกเลิก (ส่งให้ผู้จอง)
+                    </label>
+                    <textarea
+                      id="cancelReason"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="ระบุเหตุผลการยกเลิก เช่น แอร์เสีย, จองซ้อน..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition-all resize-y"
+                      rows={2}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 pt-2">

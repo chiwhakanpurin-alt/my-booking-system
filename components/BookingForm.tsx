@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, User, Clock, FileText, ArrowLeft, Loader2, Mail } from 'lucide-react';
+import { CalendarDays, User, Clock, FileText, ArrowLeft, Loader2, Mail, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast, ToastContainer } from '@/components/Toast';
 
@@ -25,6 +25,8 @@ export default function BookingForm() {
     details: '',
   });
 
+  const [bookingMode, setBookingMode] = useState<'single' | 'multiple'>('single');
+  const [multipleDates, setMultipleDates] = useState([{ date: '', start_time: '', end_time: '' }]);
   const [loading, setLoading] = useState(false);
   const { toasts, toast, dismissToast } = useToast();
 
@@ -53,17 +55,35 @@ export default function BookingForm() {
       toast.error('กรุณาเลือกห้องประชุม');
       return;
     }
-    if (!formData.booking_date) {
-      toast.error('กรุณาเลือกวันที่ต้องการจอง');
-      return;
-    }
-    if (!formData.start_time || !formData.end_time) {
-      toast.error('กรุณาระบุช่วงเวลาให้ครบถ้วน');
-      return;
-    }
-    if (formData.start_time >= formData.end_time) {
-      toast.error('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
-      return;
+    if (bookingMode === 'single') {
+      if (!formData.booking_date) {
+        toast.error('กรุณาเลือกวันที่ต้องการจอง');
+        return;
+      }
+      if (!formData.start_time || !formData.end_time) {
+        toast.error('กรุณาระบุช่วงเวลาให้ครบถ้วน');
+        return;
+      }
+      if (formData.start_time >= formData.end_time) {
+        toast.error('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+        return;
+      }
+    } else {
+      if (multipleDates.length === 0) {
+        toast.error('กรุณาเพิ่มวันที่ต้องการจองอย่างน้อย 1 วัน');
+        return;
+      }
+      for (let i = 0; i < multipleDates.length; i++) {
+        const d = multipleDates[i];
+        if (!d.date || !d.start_time || !d.end_time) {
+          toast.error(`กรุณากรอกข้อมูลวันที่ ${i + 1} ให้ครบถ้วน`);
+          return;
+        }
+        if (d.start_time >= d.end_time) {
+          toast.error(`เวลาสิ้นสุดของวันที่ ${i + 1} ต้องมากกว่าเวลาเริ่มต้น`);
+          return;
+        }
+      }
     }
 
     const subscribeToPush = async () => {
@@ -100,27 +120,69 @@ export default function BookingForm() {
       setLoading(true);
       const pushSubscription = await subscribeToPush();
 
-      const payload = {
-        ...formData,
-        pushSubscription
-      };
+      let successCount = 0;
+      let anySuccessData = null;
 
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      if (bookingMode === 'single') {
+        const payload = {
+          ...formData,
+          pushSubscription
+        };
 
-      const data = await response.json();
+        const response = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
 
-      if (response.ok && data.success) {
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          successCount++;
+          anySuccessData = data.data;
+        } else {
+          toast.error('บันทึกไม่สำเร็จ', data.message || 'กรุณาลองใหม่อีกครั้ง');
+          setLoading(false);
+          return;
+        }
+      } else {
+        for (const d of multipleDates) {
+          const payload = {
+            ...formData,
+            booking_date: d.date,
+            start_time: d.start_time,
+            end_time: d.end_time,
+            pushSubscription
+          };
+          const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (response.ok && data.success) {
+            successCount++;
+            anySuccessData = data.data;
+          } else {
+            toast.error(`บันทึกวันที่ ${d.date} ไม่สำเร็จ`, data.message || 'กรุณาลองใหม่อีกครั้ง');
+            if (successCount === 0) {
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      }
+
+      if (successCount > 0) {
         // Store booking ID in sessionStorage to show notifications only to this user
         try {
           const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
-          if (data.data?.id) {
-            pending.push(data.data.id);
+          if (anySuccessData?.id) {
+            pending.push(anySuccessData.id);
             sessionStorage.setItem('pending_bookings', JSON.stringify(pending));
           }
         } catch (e) {
@@ -139,13 +201,12 @@ export default function BookingForm() {
           end_time: '',
           details: '',
         });
+        setMultipleDates([{ date: '', start_time: '', end_time: '' }]);
         // Redirect home after 2.5 seconds
         setTimeout(() => {
           router.push('/');
           router.refresh();
         }, 2500);
-      } else {
-        toast.error('บันทึกไม่สำเร็จ', data.message || 'กรุณาลองใหม่อีกครั้ง');
       }
     } catch (error) {
       console.error('Submit booking error:', error);
@@ -157,6 +218,26 @@ export default function BookingForm() {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {/* 3D Full Screen Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/60 dark:bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="cube-wrapper mb-10">
+            <div className="cube">
+              <div className="front"></div>
+              <div className="back"></div>
+              <div className="right"></div>
+              <div className="left"></div>
+              <div className="top"></div>
+              <div className="bottom"></div>
+            </div>
+          </div>
+          <h3 className="text-xl font-black text-white tracking-widest drop-shadow-md">
+            กำลังส่งข้อมูล...
+          </h3>
+          <p className="text-slate-200/80 mt-2 text-sm font-medium">กรุณารอสักครู่ ระบบกำลังจัดเตรียมการจองให้คุณ</p>
+        </div>
+      )}
+
       {/* Floating Toast Notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
@@ -271,63 +352,172 @@ export default function BookingForm() {
             </div>
           </div>
 
-          {/* Booking Date */}
-          <div className="space-y-1.5">
-            <label htmlFor="booking_date" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
-              เลือกวันที่จอง <span className="text-rose-500">*</span>
+          {/* Booking Mode Selection */}
+          <div className="space-y-3 pb-2 border-t border-slate-200/50 dark:border-zinc-800/50 pt-4 mt-2">
+            <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+              รูปแบบการจอง <span className="text-rose-500">*</span>
             </label>
-            <input
-              id="booking_date"
-              name="booking_date"
-              type="date"
-              required
-              min={new Date().toLocaleDateString('en-CA')} // YYYY-MM-DD local timezone format
-              value={formData.booking_date}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
-            />
-          </div>
-
-          {/* Time Picker Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Start Time */}
-            <div className="space-y-1.5">
-              <label htmlFor="start_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
-                เวลาเริ่มต้น <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  id="start_time"
-                  name="start_time"
-                  type="time"
-                  required
-                  value={formData.start_time}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 cursor-pointer bg-white/40 dark:bg-zinc-900/30 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-pink-700/50 transition">
+                <input 
+                  type="radio" 
+                  name="bookingMode" 
+                  value="single" 
+                  checked={bookingMode === 'single'} 
+                  onChange={() => setBookingMode('single')} 
+                  className="text-pink-500 focus:ring-pink-500 h-4 w-4 cursor-pointer"
                 />
-                <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
-              </div>
-            </div>
-
-            {/* End Time */}
-            <div className="space-y-1.5">
-              <label htmlFor="end_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
-                เวลาสิ้นสุด <span className="text-rose-500">*</span>
+                <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จอง 1 วัน</span>
               </label>
-              <div className="relative">
-                <input
-                  id="end_time"
-                  name="end_time"
-                  type="time"
-                  required
-                  value={formData.end_time}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+              <label className="flex items-center gap-2 cursor-pointer bg-white/40 dark:bg-zinc-900/30 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-pink-700/50 transition">
+                <input 
+                  type="radio" 
+                  name="bookingMode" 
+                  value="multiple" 
+                  checked={bookingMode === 'multiple'} 
+                  onChange={() => setBookingMode('multiple')} 
+                  className="text-pink-500 focus:ring-pink-500 h-4 w-4 cursor-pointer"
                 />
-                <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
-              </div>
+                <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จองหลายวัน</span>
+              </label>
             </div>
           </div>
+
+          {bookingMode === 'single' ? (
+            <>
+              {/* Booking Date */}
+              <div className="space-y-1.5">
+                <label htmlFor="booking_date" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                  เลือกวันที่จอง <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  id="booking_date"
+                  name="booking_date"
+                  type="date"
+                  required={bookingMode === 'single'}
+                  min={new Date().toLocaleDateString('en-CA')} // YYYY-MM-DD local timezone format
+                  value={formData.booking_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                />
+              </div>
+
+              {/* Time Picker Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Start Time */}
+                <div className="space-y-1.5">
+                  <label htmlFor="start_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                    เวลาเริ่มต้น <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="start_time"
+                      name="start_time"
+                      type="time"
+                      required={bookingMode === 'single'}
+                      value={formData.start_time}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                    />
+                    <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
+                  </div>
+                </div>
+
+                {/* End Time */}
+                <div className="space-y-1.5">
+                  <label htmlFor="end_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                    เวลาสิ้นสุด <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="end_time"
+                      name="end_time"
+                      type="time"
+                      required={bookingMode === 'single'}
+                      value={formData.end_time}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                    />
+                    <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                รายการวันที่ต้องการจอง <span className="text-rose-500">*</span>
+              </label>
+              {multipleDates.map((item, index) => (
+                <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-end border-b border-slate-200 dark:border-zinc-800 pb-4 last:border-0 last:pb-0">
+                  <div className="space-y-1.5 w-full">
+                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">วันที่ {index + 1}</label>
+                    <input
+                      type="date"
+                      required={bookingMode === 'multiple'}
+                      min={new Date().toLocaleDateString('en-CA')}
+                      value={item.date}
+                      onChange={(e) => {
+                        const newDates = [...multipleDates];
+                        newDates[index].date = e.target.value;
+                        setMultipleDates(newDates);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-1.5 w-full sm:w-28">
+                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">เริ่ม</label>
+                    <input
+                      type="time"
+                      required={bookingMode === 'multiple'}
+                      value={item.start_time}
+                      onChange={(e) => {
+                        const newDates = [...multipleDates];
+                        newDates[index].start_time = e.target.value;
+                        setMultipleDates(newDates);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-1.5 w-full sm:w-28">
+                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">สิ้นสุด</label>
+                    <input
+                      type="time"
+                      required={bookingMode === 'multiple'}
+                      value={item.end_time}
+                      onChange={(e) => {
+                        const newDates = [...multipleDates];
+                        newDates[index].end_time = e.target.value;
+                        setMultipleDates(newDates);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                    />
+                  </div>
+                  {multipleDates.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newDates = multipleDates.filter((_, i) => i !== index);
+                        setMultipleDates(newDates);
+                      }}
+                      className="h-[42px] px-3 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition font-bold text-xs flex items-center gap-1 w-full sm:w-auto justify-center cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" /> <span className="sm:hidden">ลบ</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMultipleDates([...multipleDates, { date: '', start_time: '', end_time: '' }])}
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 px-4 py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" /> เพิ่มวันจอง
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Details / Optional description */}
           <div className="space-y-1.5">

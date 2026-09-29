@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     // 2. Parse and Validate Input
     const body = await request.json();
-    const { bookingId, status } = body;
+    const { bookingId, status, reason } = body;
 
     if (!bookingId) {
       return NextResponse.json({ success: false, message: 'ไม่พบรหัสรายการจอง' }, { status: 400 });
@@ -101,9 +101,13 @@ export async function POST(request: Request) {
           ? '✅ อนุมัติการจองแล้ว!' 
           : '❌ ยกเลิกการจอง';
         
-        const bodyMsg = status === 'อนุมัติแล้ว'
+        let bodyMsg = status === 'อนุมัติแล้ว'
           ? `การจองห้อง ${bookingData.room_name} ของคุณได้รับการอนุมัติแล้ว`
           : `การจองห้อง ${bookingData.room_name} ของคุณถูกยกเลิก`;
+        
+        if (status === 'ยกเลิก' && reason) {
+          bodyMsg += `\nหมายเหตุ: ${reason}`;
+        }
 
         await webpush.sendNotification(pushSubscription, JSON.stringify({ title, body: bodyMsg }));
       } catch (err) {
