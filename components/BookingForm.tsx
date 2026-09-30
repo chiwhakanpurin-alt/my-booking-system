@@ -378,7 +378,7 @@ export default function BookingForm() {
                   onChange={() => setBookingMode('multiple')} 
                   className="text-pink-500 focus:ring-pink-500 h-4 w-4 cursor-pointer"
                 />
-                <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จองหลายวัน</span>
+                <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จองมากกว่า1วัน</span>
               </label>
             </div>
           </div>
