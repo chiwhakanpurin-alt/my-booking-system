@@ -118,6 +118,18 @@ export default function Navbar() {
 
             {/* Dark Mode & Actions */}
             <div className="flex items-center gap-2">
+              {/* Mobile Admin Link — accessible on smaller screens at top */}
+              <Link
+                href="/admin"
+                className={`sm:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-850 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm ${
+                  pathname.startsWith('/admin') ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40' : ''
+                }`}
+                title="ผู้ดูแลระบบ"
+                aria-label="ผู้ดูแลระบบ"
+              >
+                <UserCheck className="h-4.5 w-4.5" />
+              </Link>
+
               <button
                 onClick={toggleDarkMode}
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-850 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"

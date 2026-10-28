@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, User, Clock, FileText, ArrowLeft, Loader2, Mail, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, User, Clock, FileText, ArrowLeft, Loader2, Phone, Building2, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast, ToastContainer } from '@/components/Toast';
 
@@ -17,6 +17,7 @@ export default function BookingForm() {
   const [formData, setFormData] = useState({
     activity_name: '',
     booked_by: '',
+    department: '',
     contact_info: '',
     room_name: '',
     booking_date: '',
@@ -194,6 +195,7 @@ export default function BookingForm() {
         setFormData({
           activity_name: '',
           booked_by: '',
+          department: '',
           contact_info: '',
           room_name: '',
           booking_date: '',
@@ -307,6 +309,28 @@ export default function BookingForm() {
             </div>
           </div>
 
+          {/* Department / Learning Area (Optional) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="department" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                กลุ่มสาระ / ฝ่ายงาน
+              </label>
+              <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">(ไม่บังคับ)</span>
+            </div>
+            <div className="relative">
+              <input
+                id="department"
+                name="department"
+                type="text"
+                value={formData.department}
+                onChange={handleChange}
+                placeholder="เช่น กลุ่มสาระฯ วิทยาศาสตร์และเทคโนโลยี, งานวิชาการ"
+                className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
+              />
+              <Building2 className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
+            </div>
+          </div>
+
           {/* Contact Info */}
           <div className="space-y-1.5">
             <label htmlFor="contact_info" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
@@ -323,7 +347,7 @@ export default function BookingForm() {
                 placeholder="เช่น 089-xxxxxxx"
                 className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm"
               />
-              <Mail className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
+              <Phone className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
             </div>
           </div>
 

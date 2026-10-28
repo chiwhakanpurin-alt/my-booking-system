@@ -28,6 +28,33 @@ const THAI_MONTHS = [
 
 const WEEKDAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 
+// รายชื่อห้องประชุมทั้งหมดในระบบ
+const ALL_ROOMS = ['ห้องประชุมปลายน้ำ', 'ห้องประชุมพรหมโลก', 'ห้องประชุมอ้ายเขียว'];
+
+function getRoomAvailability(
+  bookings: Booking[],
+  dateStr: string,
+  allRooms: string[]
+): { room: string; status: 'available' | 'pending' | 'confirmed' }[] {
+  // รวมห้องจาก booking เผื่อมีห้องนอกลิสต์
+  const extraRooms = bookings
+    .filter(b => b.booking_date === dateStr && b.status !== 'ยกเลิก' && b.status !== 'cancelled')
+    .map(b => b.room_name);
+  const rooms = Array.from(new Set([...allRooms, ...extraRooms]));
+
+  return rooms.map(room => {
+    const dayBookings = bookings.filter(
+      b => b.booking_date === dateStr && b.room_name === room &&
+           b.status !== 'ยกเลิก' && b.status !== 'cancelled'
+    );
+    const hasConfirmed = dayBookings.some(b => b.status === 'อนุมัติแล้ว' || b.status === 'approved');
+    const hasPending   = dayBookings.some(b => b.status === 'รออนุมัติ'   || b.status === 'pending');
+    if (hasConfirmed) return { room, status: 'confirmed' as const };
+    if (hasPending)   return { room, status: 'pending'   as const };
+    return { room, status: 'available' as const };
+  });
+}
+
 export default function Calendar({ bookings }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateBookings, setSelectedDateBookings] = useState<Booking[] | null>(null);
@@ -321,9 +348,65 @@ export default function Calendar({ bookings }: CalendarProps) {
             <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
               {(() => {
                 const validBookings = selectedDateBookings.filter(b => b.status !== 'ยกเลิก');
+                const roomAvail = getRoomAvailability(bookings, selectedDateStr!, ALL_ROOMS);
+                const freeCount = roomAvail.filter(r => r.status === 'available').length;
                 
                 return (
                   <>
+                    {/* Room Availability Panel */}
+                    <div className="rounded-xl border border-slate-200/60 dark:border-zinc-700/40 bg-slate-50/60 dark:bg-zinc-900/40 p-3.5 space-y-2.5">
+                      <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                        <DoorOpen className="h-3.5 w-3.5 text-indigo-500" />
+                        สถานะห้องประชุมวันนี้
+                        <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          freeCount > 0
+                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+                        }`}>
+                          {freeCount > 0 ? `ว่าง ${freeCount} ห้อง` : 'ไม่มีห้องว่าง'}
+                        </span>
+                      </p>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {roomAvail.map(({ room, status }) => {
+                          const cfg = {
+                            available: {
+                              dot: 'bg-emerald-500',
+                              badge: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40',
+                              label: '🟢 ว่าง',
+                            },
+                            pending: {
+                              dot: 'bg-amber-500',
+                              badge: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40',
+                              label: '🟡 รออนุมัติ',
+                            },
+                            confirmed: {
+                              dot: 'bg-rose-500',
+                              badge: 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40',
+                              label: '🔴 จองแล้ว',
+                            },
+                          }[status];
+                          return (
+                            <div
+                              key={room}
+                              className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+                                status === 'available'
+                                  ? 'bg-white/70 dark:bg-zinc-900/50 border-slate-200/50 dark:border-zinc-700/30'
+                                  : 'bg-white/50 dark:bg-zinc-900/30 border-slate-200/40 dark:border-zinc-700/20'
+                              }`}
+                            >
+                              <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
+                                {room}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.badge}`}>
+                                {cfg.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Daily Count summary */}
                     <div className="bg-indigo-50/70 dark:bg-indigo-950/20 rounded-xl p-3.5 border border-indigo-200/50 dark:border-indigo-900/30 text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-300">
                       มีห้องประชุมถูกจองทั้งหมด {validBookings.length} รายการในวันนึ้

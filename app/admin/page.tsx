@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { Check, X, HelpCircle, Loader2, RefreshCw, Search, UserCheck, Trash2 } from 'lucide-react';
+import { Check, X, HelpCircle, Loader2, RefreshCw, Search, UserCheck, Trash2, Download } from 'lucide-react';
+import ExportModal from '@/components/ExportModal';
 
 interface Booking {
   id: string;
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ทั้งหมด' | 'รออนุมัติ' | 'อนุมัติแล้ว' | 'ยกเลิก'>('ทั้งหมด');
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Confirmation Modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -42,6 +44,7 @@ export default function AdminDashboard() {
     details: string;
     activityName: string;
     contactInfo?: string;
+    department?: string;
   } | null>(null);
 
   const fetchBookings = async () => {
@@ -207,13 +210,23 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <button
-            onClick={fetchBookings}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition shadow-sm cursor-pointer shrink-0"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            ดึงข้อมูลใหม่
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-sm shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <Download className="h-3.5 w-3.5" />
+              ส่งออกข้อมูล (Export)
+            </button>
+
+            <button
+              onClick={fetchBookings}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition shadow-sm cursor-pointer"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              ดึงข้อมูลใหม่
+            </button>
+          </div>
         </div>
 
         {/* Filter and Search Bar Row */}
@@ -305,13 +318,21 @@ export default function AdminDashboard() {
 
                       let cleanDetails = '';
                       let contactInfo = '';
+                      let department = '';
                       if (booking.details) {
                         const noPushSub = booking.details.split('---PUSH_SUB---')[0];
-                        const contactSplit = noPushSub.split('---CONTACT_INFO---');
-                        cleanDetails = contactSplit[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim();
-                        if (contactSplit.length > 1) {
-                          contactInfo = contactSplit[1].trim();
+                        
+                        const contactMatch = noPushSub.match(/---CONTACT_INFO---\s*([\s\S]*?)(?:---[A-Z_]+---|$)/);
+                        if (contactMatch) {
+                          contactInfo = contactMatch[1].trim();
                         }
+
+                        const deptMatch = noPushSub.match(/---DEPARTMENT---\s*([\s\S]*?)(?:---[A-Z_]+---|$)/);
+                        if (deptMatch) {
+                          department = deptMatch[1].trim();
+                        }
+
+                        cleanDetails = noPushSub.split(/---(?:CONTACT_INFO|DEPARTMENT)---/)[0].replace(/^อีเมลผู้จอง:\s*[^\s]+\s*/, '').trim();
                       }
 
                       return (
@@ -330,7 +351,8 @@ export default function AdminDashboard() {
                                   isOpen: true,
                                   details: cleanDetails,
                                   activityName: booking.activity_name,
-                                  contactInfo: contactInfo
+                                  contactInfo: contactInfo,
+                                  department: department
                                 })}
                                 className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer"
                               >
@@ -340,23 +362,31 @@ export default function AdminDashboard() {
                           </td>
                           {/* Booked by */}
                           <td className="px-5 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-slate-700 dark:text-zinc-300">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-slate-800 dark:text-zinc-200">
                                 {booking.booked_by}
                               </span>
+                              {department && (
+                                <span className="inline-flex items-center text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                  {department}
+                                </span>
+                              )}
                               {contactInfo && (
-                                <button
-                                  onClick={() => setDetailsModal({
-                                    isOpen: true,
-                                    details: cleanDetails,
-                                    activityName: booking.activity_name,
-                                    contactInfo: contactInfo
-                                  })}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer shrink-0"
-                                  title="ดูเบอร์ติดต่อ"
-                                >
-                                  ดูเบอร์ติดต่อ
-                                </button>
+                                <div className="mt-1">
+                                  <button
+                                    onClick={() => setDetailsModal({
+                                      isOpen: true,
+                                      details: cleanDetails,
+                                      activityName: booking.activity_name,
+                                      contactInfo: contactInfo,
+                                      department: department
+                                    })}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50 dark:hover:bg-indigo-900/50 transition cursor-pointer shrink-0"
+                                    title="ดูเบอร์ติดต่อ"
+                                  >
+                                    ดูเบอร์ติดต่อ
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </td>
@@ -530,6 +560,12 @@ export default function AdminDashboard() {
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800/80 space-y-3">
+                {detailsModal.department && (
+                  <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-zinc-300">
+                    <span className="font-bold text-slate-900 dark:text-white">กลุ่มสาระ / ฝ่ายงาน:</span>
+                    <span className="text-slate-800 dark:text-zinc-200">{detailsModal.department}</span>
+                  </div>
+                )}
                 {detailsModal.contactInfo && (
                   <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-zinc-300">
                     <span className="font-bold text-slate-900 dark:text-white">เบอร์โทรศัพท์ติดต่อ:</span>
@@ -556,6 +592,13 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Export Data & Monthly Report Modal */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        bookings={bookings}
+      />
     </div>
   );
 }

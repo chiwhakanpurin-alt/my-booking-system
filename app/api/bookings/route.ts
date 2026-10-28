@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { activity_name, booked_by, contact_info, room_name, booking_date, start_time, end_time, details } = body;
+    const { activity_name, booked_by, department, contact_info, room_name, booking_date, start_time, end_time, details } = body;
 
     // Server-side validations (Security: Prevent client-side manipulation, protect DB)
     if (!activity_name?.trim()) {
@@ -154,6 +154,7 @@ export async function POST(request: Request) {
     // Sanitize input to prevent basic XSS
     const cleanActivity = activity_name.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanBookedBy = booked_by.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    const cleanDepartment = department ? department.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
     const cleanContact = contact_info.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
     const cleanDetails = details ? details.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim() : '';
 
@@ -162,14 +163,19 @@ export async function POST(request: Request) {
       pushSubString = `\n\n---PUSH_SUB---\n${JSON.stringify(body.pushSubscription)}`;
     }
 
+    let departmentString = '';
+    if (cleanDepartment) {
+      departmentString = `\n\n---DEPARTMENT---\n${cleanDepartment}`;
+    }
+
     let contactInfoString = '';
     if (cleanContact) {
       contactInfoString = `\n\n---CONTACT_INFO---\n${cleanContact}`;
     }
 
     const combinedDetails = cleanDetails 
-      ? `${cleanDetails}${contactInfoString}${pushSubString}`
-      : `${contactInfoString}${pushSubString}`.trim();
+      ? `${cleanDetails}${departmentString}${contactInfoString}${pushSubString}`
+      : `${departmentString}${contactInfoString}${pushSubString}`.trim();
 
     const newBooking = {
       activity_name: cleanActivity,
@@ -197,6 +203,7 @@ export async function POST(request: Request) {
       await sendBookingNotificationToAdmin({
         activityName: cleanActivity,
         bookedBy: cleanBookedBy,
+        department: cleanDepartment,
         roomName: room_name,
         bookingDate: booking_date,
         startTime: start_time,
@@ -216,7 +223,7 @@ export async function POST(request: Request) {
       
       if (adminSubs && adminSubs.length > 0) {
         const title = '📢 มีคำขอจองห้องประชุมใหม่!';
-        const bodyMsg = `ผู้จอง: ${cleanBookedBy}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time}`;
+        const bodyMsg = `ผู้จอง: ${cleanBookedBy}${cleanDepartment ? ` (${cleanDepartment})` : ''}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time}`;
         const payload = JSON.stringify({ title, body: bodyMsg });
 
         const pushPromises = adminSubs.map(async (sub) => {

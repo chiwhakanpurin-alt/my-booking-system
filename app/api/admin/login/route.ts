@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { signJWT } from '@/lib/jwt';
 import { rateLimit, getIP } from '@/lib/rate-limit';
 
-// SHA-256 Hash of '5686340111349087'
-const TARGET_PASSWORD_HASH = '8b4b31586c26a62e689ea8c410c83fd2b558d26feebdb4ef5d00928aeb8bdef4';
+// Admin password hash from environment variable or default hash
+const TARGET_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || 'ac716ffdd1de888a42ab885a83211ec991cee0972c81168408fffd8db8abb0fd';
 
 async function sha256(text: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(text);
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     // Security: Rate limiting (10 attempts per minute)
     const ip = getIP(request);
-    const { success, remaining } = rateLimit(ip, 10, 60 * 1000);
+    const { success } = rateLimit(ip, 10, 60 * 1000);
     if (!success) {
       return NextResponse.json(
         { success: false, message: 'กรุณารอสักครู่ก่อนทำรายการใหม่' },
@@ -27,14 +27,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { password } = body;
 
-    if (!password || password.length !== 16) {
+    if (!password || typeof password !== 'string' || !password.trim()) {
       return NextResponse.json(
-        { success: false, message: 'รหัสผ่านต้องมีความยาว 16 หลัก' },
+        { success: false, message: 'กรุณากรอกรหัสผ่าน' },
         { status: 400 }
       );
     }
 
-    const inputHash = await sha256(password);
+    const inputHash = await sha256(password.trim());
 
     if (inputHash !== TARGET_PASSWORD_HASH) {
       return NextResponse.json(

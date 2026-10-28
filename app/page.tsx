@@ -7,7 +7,7 @@ import DashboardStats from '@/components/DashboardStats';
 import RoomUsageStats from '@/components/RoomUsageStats';
 import Calendar from '@/components/Calendar';
 import BookingStatusWatcher from '@/components/BookingStatusWatcher';
-import { CalendarPlus, ShieldAlert, Loader2, ArrowRight, BookOpen, X } from 'lucide-react';
+import { CalendarPlus, ShieldAlert, Loader2, BookOpen, X } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -90,13 +90,6 @@ export default function Home() {
               >
                 <CalendarPlus className="h-4.5 w-4.5" />
                 จองห้องประชุม
-              </Link>
-              <Link
-                href="/admin"
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-semibold border border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm cursor-pointer"
-              >
-                ผู้ดูแลระบบ (Admin)
-                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

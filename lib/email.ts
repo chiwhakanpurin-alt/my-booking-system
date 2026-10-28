@@ -13,6 +13,7 @@ const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@booking.com';
 interface EmailNotificationData {
   activityName: string;
   bookedBy: string;
+  department?: string;
   roomName: string;
   bookingDate: string;
   startTime: string;
@@ -24,7 +25,7 @@ interface EmailNotificationData {
 // 📧 Send booking request notification to admin
 export async function sendBookingNotificationToAdmin(data: EmailNotificationData) {
   try {
-    const { activityName, bookedBy, roomName, bookingDate, startTime, endTime, details } = data;
+    const { activityName, bookedBy, department, roomName, bookingDate, startTime, endTime, details } = data;
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -61,6 +62,10 @@ export async function sendBookingNotificationToAdmin(data: EmailNotificationData
               <span class="label">👤 ผู้จอง:</span>
               <span class="value">${bookedBy}</span>
             </div>
+            ${department ? `<div class="info-row">
+              <span class="label">🏢 กลุ่มสาระ/ฝ่ายงาน:</span>
+              <span class="value">${department}</span>
+            </div>` : ''}
             <div class="info-row">
               <span class="label">🏢 ห้องประชุม:</span>
               <span class="value">${roomName}</span>
