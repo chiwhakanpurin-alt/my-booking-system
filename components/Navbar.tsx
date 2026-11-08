@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { CalendarDays, LayoutDashboard, UserCheck, Moon, Sun, LogOut } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, UserCheck, LogOut } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { LiquidToggle, NimbusToggleIcons } from '@/components/ui/liquid-glass-toggle';
 
 // Lazy-load the bell — it connects WebSocket only for logged-in admins
 const NotificationBell = dynamic(() => import('@/components/NotificationBell'), { ssr: false });
@@ -40,8 +41,7 @@ export default function Navbar() {
     checkAdminSession();
   }, [pathname]);
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
+  const handleDarkModeChange = (newMode: boolean) => {
     setDarkMode(newMode);
     if (newMode) {
       document.documentElement.classList.add('dark');
@@ -130,13 +130,14 @@ export default function Navbar() {
                 <UserCheck className="h-4.5 w-4.5" />
               </Link>
 
-              <button
-                onClick={toggleDarkMode}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-850 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
-                aria-label="Toggle dark mode"
-              >
-                {darkMode ? <Sun className="h-4.5 w-4.5 text-amber-500" /> : <Moon className="h-4.5 w-4.5 text-slate-500" />}
-              </button>
+              <LiquidToggle
+                size={36}
+                tone={darkMode ? 'dark' : 'light'}
+                checked={darkMode}
+                onCheckedChange={handleDarkModeChange}
+                icons={{ off: NimbusToggleIcons.sun, on: NimbusToggleIcons.moon }}
+                label="Toggle dark mode"
+              />
 
               {/* Notification bell — visible only when admin is logged in */}
               {isAdmin && <NotificationBell />}
