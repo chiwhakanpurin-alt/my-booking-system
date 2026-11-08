@@ -45,12 +45,12 @@ function getRoomAvailability(
   return rooms.map(room => {
     const dayBookings = bookings.filter(
       b => b.booking_date === dateStr && b.room_name === room &&
-           b.status !== 'ยกเลิก' && b.status !== 'cancelled'
+        b.status !== 'ยกเลิก' && b.status !== 'cancelled'
     );
     const hasConfirmed = dayBookings.some(b => b.status === 'อนุมัติแล้ว' || b.status === 'approved');
-    const hasPending   = dayBookings.some(b => b.status === 'รออนุมัติ'   || b.status === 'pending');
+    const hasPending = dayBookings.some(b => b.status === 'รออนุมัติ' || b.status === 'pending');
     if (hasConfirmed) return { room, status: 'confirmed' as const };
-    if (hasPending)   return { room, status: 'pending'   as const };
+    if (hasPending) return { room, status: 'pending' as const };
     return { room, status: 'available' as const };
   });
 }
@@ -60,7 +60,7 @@ export default function Calendar({ bookings }: CalendarProps) {
   const [selectedDateBookings, setSelectedDateBookings] = useState<Booking[] | null>(null);
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  
+
   // Toast & Change Request State
   const { toasts, toast, dismissToast } = useToast();
   const [requestModal, setRequestModal] = useState<{
@@ -120,7 +120,7 @@ export default function Calendar({ bookings }: CalendarProps) {
     const dateStr = formatDateString(year, month, day);
 
     const dayBookings = bookings.filter((b) => b.booking_date === dateStr);
-    
+
     setSelectedDateBookings(dayBookings);
     setSelectedDateStr(dateStr);
   };
@@ -205,10 +205,10 @@ export default function Calendar({ bookings }: CalendarProps) {
   return (
     <div className="w-full">
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-      
+
       {/* Calendar Card */}
       <div className="rounded-3xl glass-panel shadow-lg border border-slate-200/50 dark:border-zinc-800/40 p-4 sm:p-6">
-        
+
         {/* Month Header Navigation */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -269,24 +269,21 @@ export default function Calendar({ bookings }: CalendarProps) {
               <button
                 key={idx}
                 onClick={() => handleDateClick(day, isCurrentMonth)}
-                className={`relative flex flex-col h-14 sm:h-20 w-full justify-between p-1.5 sm:p-2.5 text-left rounded-2xl border transition-all select-none cursor-pointer outline-none group ${
-                  isCurrentMonth
+                className={`relative flex flex-col h-14 sm:h-20 w-full justify-between p-1.5 sm:p-2.5 text-left rounded-2xl border transition-all select-none cursor-pointer outline-none group ${isCurrentMonth
                     ? 'bg-white/40 dark:bg-zinc-900/30 border-slate-200/50 dark:border-zinc-800/40 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10 hover:border-indigo-200/70 dark:hover:border-indigo-900/40'
                     : 'bg-slate-50/10 dark:bg-zinc-950/10 border-slate-100/30 dark:border-zinc-900/20 text-slate-300 dark:text-zinc-700 hover:border-indigo-100'
-                } ${
-                  dayIsToday
+                  } ${dayIsToday
                     ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-zinc-950 border-indigo-400! dark:border-indigo-500!'
                     : ''
-                }`}
+                  }`}
               >
                 {/* Day Number */}
-                <span className={`text-xs sm:text-sm font-semibold leading-none ${
-                  dayIsToday 
-                    ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
-                    : isCurrentMonth 
-                      ? 'text-slate-800 dark:text-zinc-200' 
+                <span className={`text-xs sm:text-sm font-semibold leading-none ${dayIsToday
+                    ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                    : isCurrentMonth
+                      ? 'text-slate-800 dark:text-zinc-200'
                       : 'text-slate-400 dark:text-zinc-600'
-                }`}>
+                  }`}>
                   {day}
                 </span>
 
@@ -300,7 +297,7 @@ export default function Calendar({ bookings }: CalendarProps) {
                     {cellPendingBookings.length > 0 && (
                       <span className="flex h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-cyan-500" title={`รออนุมัติ ${cellPendingBookings.length} รายการ`} />
                     )}
-                    
+
                     {/* On Desktop, show count badge */}
                     <span className="hidden sm:inline-block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 leading-none">
                       {cellBookings.length} จอง
@@ -316,9 +313,9 @@ export default function Calendar({ bookings }: CalendarProps) {
       {/* Booking Details Popover/Bubble Overlay via Portal */}
       {selectedDateBookings !== null && selectedDateStr !== null && mounted && createPortal(
         <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in-scale backdrop-blur-overlay bg-slate-900/60 dark:bg-black/80"
-        onClick={closePopover}
-      >
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in-scale backdrop-blur-overlay bg-slate-900/60 dark:bg-black/80"
+          onClick={closePopover}
+        >
           <div
             className="w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-3xl glass-modal bg-white/98 dark:bg-zinc-900/98 shadow-2xl p-6 animate-fade-in-scale text-slate-900 dark:text-zinc-100"
             onClick={(e) => e.stopPropagation()}
@@ -350,7 +347,7 @@ export default function Calendar({ bookings }: CalendarProps) {
                 const validBookings = selectedDateBookings.filter(b => b.status !== 'ยกเลิก');
                 const roomAvail = getRoomAvailability(bookings, selectedDateStr!, ALL_ROOMS);
                 const freeCount = roomAvail.filter(r => r.status === 'available').length;
-                
+
                 return (
                   <>
                     {/* Room Availability Panel */}
@@ -358,11 +355,10 @@ export default function Calendar({ bookings }: CalendarProps) {
                       <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                         <DoorOpen className="h-3.5 w-3.5 text-indigo-500" />
                         สถานะห้องประชุมวันนี้
-                        <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          freeCount > 0
+                        <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${freeCount > 0
                             ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                             : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
-                        }`}>
+                          }`}>
                           {freeCount > 0 ? `ว่าง ${freeCount} ห้อง` : 'ไม่มีห้องว่าง'}
                         </span>
                       </p>
@@ -372,27 +368,26 @@ export default function Calendar({ bookings }: CalendarProps) {
                             available: {
                               dot: 'bg-emerald-500',
                               badge: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40',
-                              label: '🟢 ว่าง',
+                              label: 'ว่าง',
                             },
                             pending: {
                               dot: 'bg-amber-500',
                               badge: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40',
-                              label: '🟡 รออนุมัติ',
+                              label: 'รออนุมัติ',
                             },
                             confirmed: {
                               dot: 'bg-rose-500',
                               badge: 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40',
-                              label: '🔴 จองแล้ว',
+                              label: 'จองแล้ว',
                             },
                           }[status];
                           return (
                             <div
                               key={room}
-                              className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
-                                status === 'available'
+                              className={`flex items-center justify-between px-3 py-2 rounded-lg border ${status === 'available'
                                   ? 'bg-white/70 dark:bg-zinc-900/50 border-slate-200/50 dark:border-zinc-700/30'
                                   : 'bg-white/50 dark:bg-zinc-900/30 border-slate-200/40 dark:border-zinc-700/20'
-                              }`}
+                                }`}
                             >
                               <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
                                 <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
@@ -419,73 +414,73 @@ export default function Calendar({ bookings }: CalendarProps) {
                     ) : (
                       <div className="space-y-3">
                         {validBookings.map((booking, idx) => {
-                    const isApproved = booking.status === 'อนุมัติแล้ว' || booking.status === 'approved';
-                    const isPending = booking.status === 'รออนุมัติ' || booking.status === 'pending';
-                    const isCancelled = booking.status === 'ยกเลิก' || booking.status === 'cancelled';
+                          const isApproved = booking.status === 'อนุมัติแล้ว' || booking.status === 'approved';
+                          const isPending = booking.status === 'รออนุมัติ' || booking.status === 'pending';
+                          const isCancelled = booking.status === 'ยกเลิก' || booking.status === 'cancelled';
 
-                    let badgeColor = '';
-                    let statusLabel = booking.status;
-                    if (isApproved) {
-                      badgeColor = 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/25';
-                      statusLabel = 'อนุมัติแล้ว';
-                    } else if (isPending) {
-                      badgeColor = 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-900/25';
-                      statusLabel = 'รออนุมัติ';
-                    } else if (isCancelled) {
-                      badgeColor = 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30';
-                      statusLabel = 'ยกเลิกแล้ว';
-                    }
+                          let badgeColor = '';
+                          let statusLabel = booking.status;
+                          if (isApproved) {
+                            badgeColor = 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/25';
+                            statusLabel = 'อนุมัติแล้ว';
+                          } else if (isPending) {
+                            badgeColor = 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-900/25';
+                            statusLabel = 'รออนุมัติ';
+                          } else if (isCancelled) {
+                            badgeColor = 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30';
+                            statusLabel = 'ยกเลิกแล้ว';
+                          }
 
-                    return (
-                      <div
-                        key={booking.id || idx}
-                        className="rounded-2xl border border-slate-200/60 dark:border-zinc-700/40 bg-white/50 dark:bg-zinc-900/50 p-4 transition-all duration-200 hover:shadow-md hover:border-indigo-200/40 dark:hover:border-indigo-800/30"
-                      >
-                        <div className="flex items-start justify-between gap-3 mb-2.5">
-                          <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
-                            {booking.activity_name}
-                          </h4>
-                          <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${badgeColor}`}>
-                            {statusLabel}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-slate-700 dark:text-zinc-300">
-                          <div className="flex items-center gap-1.5">
-                            <DoorOpen className="h-4 w-4 text-indigo-500 shrink-0" />
-                            <span>ห้อง: <strong className="text-slate-800 dark:text-zinc-200">{booking.room_name}</strong></span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-indigo-500 shrink-0" />
-                            <span>เวลา: <strong className="text-slate-800 dark:text-zinc-200">{formatTime(booking.start_time)} - {formatTime(booking.end_time)} น.</strong></span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <User className="h-4 w-4 text-indigo-500 shrink-0" />
-                            <span>ผู้จอง: <strong className="text-slate-800 dark:text-zinc-200">{booking.booked_by}</strong></span>
-                          </div>
-                        </div>
-                        
-                        {/* Action buttons to request reschedule/cancel */}
-                        {!isCancelled && (
-                          <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-zinc-700/50 flex justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setRequestModal({
-                                  isOpen: true,
-                                  booking,
-                                  contactInfo: ''
-                                });
-                                closePopover();
-                              }}
-                              className="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                          return (
+                            <div
+                              key={booking.id || idx}
+                              className="rounded-2xl border border-slate-200/60 dark:border-zinc-700/40 bg-white/50 dark:bg-zinc-900/50 p-4 transition-all duration-200 hover:shadow-md hover:border-indigo-200/40 dark:hover:border-indigo-800/30"
                             >
-                              ยกเลิกการจอง
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                              <div className="flex items-start justify-between gap-3 mb-2.5">
+                                <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
+                                  {booking.activity_name}
+                                </h4>
+                                <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${badgeColor}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-slate-700 dark:text-zinc-300">
+                                <div className="flex items-center gap-1.5">
+                                  <DoorOpen className="h-4 w-4 text-indigo-500 shrink-0" />
+                                  <span>ห้อง: <strong className="text-slate-800 dark:text-zinc-200">{booking.room_name}</strong></span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-4 w-4 text-indigo-500 shrink-0" />
+                                  <span>เวลา: <strong className="text-slate-800 dark:text-zinc-200">{formatTime(booking.start_time)} - {formatTime(booking.end_time)} น.</strong></span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <User className="h-4 w-4 text-indigo-500 shrink-0" />
+                                  <span>ผู้จอง: <strong className="text-slate-800 dark:text-zinc-200">{booking.booked_by}</strong></span>
+                                </div>
+                              </div>
+
+                              {/* Action buttons to request reschedule/cancel */}
+                              {!isCancelled && (
+                                <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-zinc-700/50 flex justify-end gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setRequestModal({
+                                        isOpen: true,
+                                        booking,
+                                        contactInfo: ''
+                                      });
+                                      closePopover();
+                                    }}
+                                    className="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    ยกเลิกการจอง
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </>
@@ -523,11 +518,11 @@ export default function Calendar({ bookings }: CalendarProps) {
                 ยกเลิกการจอง
               </h3>
             </div>
-            
+
             <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-5">
               กรุณากรอกเบอร์โทรศัพท์ที่ใช้ในการจองให้ถูกต้อง เพื่อยกเลิกการจองนี้
             </p>
-            
+
             <form onSubmit={handleSubmitRequest} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">

@@ -156,8 +156,8 @@ export default function Home() {
       {/* Guide Modal */}
       {isGuideModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60 transition-opacity" 
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60 transition-opacity"
             onClick={() => setIsGuideModalOpen(false)}
           />
           <div className="relative z-10 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -167,20 +167,20 @@ export default function Home() {
                 <BookOpen className="h-5 w-5 text-pink-500" />
                 คู่มือการใช้งานระบบจองห้องประชุม
               </h2>
-              <button 
+              <button
                 onClick={() => setIsGuideModalOpen(false)}
                 className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             {/* Modal Content - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50 dark:bg-zinc-950/50 space-y-6">
               <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-zinc-800">
-                <img 
-                  src="/guide1.png" 
-                  alt="คู่มือการจองหน้า 1" 
+                <img
+                  src="/guide1.png"
+                  alt="คู่มือการจองหน้า 1"
                   className="w-full h-auto rounded-xl"
                   onError={(e) => {
                     e.currentTarget.src = 'https://placehold.co/800x1131/ffcce6/ec4899?text=Please+upload+guide1.png+to+public+folder';
@@ -188,9 +188,9 @@ export default function Home() {
                 />
               </div>
               <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-zinc-800">
-                <img 
-                  src="/guide2.png" 
-                  alt="คู่มือการจองหน้า 2" 
+                <img
+                  src="/guide2.png"
+                  alt="คู่มือการจองหน้า 2"
                   className="w-full h-auto rounded-xl"
                   onError={(e) => {
                     e.currentTarget.src = 'https://placehold.co/800x1131/ffcce6/ec4899?text=Please+upload+guide2.png+to+public+folder';

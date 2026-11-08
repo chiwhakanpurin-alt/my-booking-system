@@ -383,23 +383,23 @@ export default function BookingForm() {
             </label>
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer bg-white/40 dark:bg-zinc-900/30 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-pink-700/50 transition">
-                <input 
-                  type="radio" 
-                  name="bookingMode" 
-                  value="single" 
-                  checked={bookingMode === 'single'} 
-                  onChange={() => setBookingMode('single')} 
+                <input
+                  type="radio"
+                  name="bookingMode"
+                  value="single"
+                  checked={bookingMode === 'single'}
+                  onChange={() => setBookingMode('single')}
                   className="text-pink-500 focus:ring-pink-500 h-4 w-4 cursor-pointer"
                 />
                 <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จอง 1 วัน</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer bg-white/40 dark:bg-zinc-900/30 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-pink-700/50 transition">
-                <input 
-                  type="radio" 
-                  name="bookingMode" 
-                  value="multiple" 
-                  checked={bookingMode === 'multiple'} 
-                  onChange={() => setBookingMode('multiple')} 
+                <input
+                  type="radio"
+                  name="bookingMode"
+                  value="multiple"
+                  checked={bookingMode === 'multiple'}
+                  onChange={() => setBookingMode('multiple')}
                   className="text-pink-500 focus:ring-pink-500 h-4 w-4 cursor-pointer"
                 />
                 <span className="text-sm text-slate-700 dark:text-zinc-300 font-bold">จองมากกว่า1วัน</span>
