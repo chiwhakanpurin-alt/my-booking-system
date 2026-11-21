@@ -66,7 +66,18 @@ export async function GET(request: Request) {
 
     // Hide cancelled bookings and old historical records (> 6 months ago) from public view for fast loading,
     // while letting admins see all records across all years for full Excel/PDF reporting.
-    if (!isAdmin) {
+    const { searchParams } = new URL(request.url);
+    const idsParam = searchParams.get('ids');
+    if (idsParam) {
+      const ids = idsParam
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .slice(0, 30);
+      if (ids.length > 0) {
+        query = query.in('id', ids);
+      }
+    } else if (!isAdmin) {
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       const minDateStr = sixMonthsAgo.toLocaleDateString('en-CA'); // YYYY-MM-DD
@@ -217,51 +228,48 @@ export async function POST(request: Request) {
       details: cleanDetails,
     }).catch((err) => console.error('Email to Admin Error:', err));
 
-    // 🚀 Send notification to admin via Web Push (Non-blocking / Background with full payload)
-    (async () => {
-      try {
-        const { data: adminSubs } = await supabaseAdmin
-          .from('bookings')
-          .select('id, details')
-          .eq('activity_name', 'ADMIN_SUBSCRIPTION');
+    // 🚀 Send notification to admin via Web Push (Await completion so Vercel doesn't freeze before APNs receives it)
+    try {
+      const { data: adminSubs } = await supabaseAdmin
+        .from('bookings')
+        .select('id, details')
+        .eq('activity_name', 'ADMIN_SUBSCRIPTION');
 
-        if (adminSubs && adminSubs.length > 0) {
-          const title = '📢 มีคำขอจองห้องประชุมใหม่!';
-          const bodyMsg = `ผู้จอง: ${cleanBookedBy}${cleanDepartment ? ` (${cleanDepartment})` : ''}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time} น.`;
-          const payload = JSON.stringify({
-            title,
-            body: bodyMsg,
-            icon: '/school-logo.png',
-            badge: '/school-logo.png',
-            tag: `new-booking-${data.id}`,
-            vibrate: [200, 100, 200, 100, 250],
-            data: {
-              url: '/admin',
-            },
-          });
+      if (adminSubs && adminSubs.length > 0) {
+        const title = '📢 มีคำขอจองห้องประชุมใหม่!';
+        const bodyMsg = `ผู้จอง: ${cleanBookedBy}${cleanDepartment ? ` (${cleanDepartment})` : ''}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time} น.`;
+        const payload = JSON.stringify({
+          title,
+          body: bodyMsg,
+          icon: '/school-logo.png',
+          badge: '/school-logo.png',
+          tag: `new-booking-${data.id}`,
+          data: {
+            url: '/admin',
+          },
+        });
 
-          const pushPromises = adminSubs.map(async (sub) => {
-            try {
-              if (sub.details) {
-                const pushSubscription = JSON.parse(sub.details);
-                await webpush.sendNotification(pushSubscription, payload);
-              }
-            } catch (err: any) {
-              if (err.statusCode === 410 || err.statusCode === 404) {
-                console.log('Deleting expired admin subscription:', sub.id);
-                await supabaseAdmin.from('bookings').delete().eq('id', sub.id);
-              } else {
-                console.error('Admin Push Notification Error:', err);
-              }
+        const pushPromises = adminSubs.map(async (sub) => {
+          try {
+            if (sub.details) {
+              const pushSubscription = JSON.parse(sub.details);
+              await webpush.sendNotification(pushSubscription, payload);
             }
-          });
+          } catch (err: any) {
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              console.log('Deleting expired admin subscription:', sub.id);
+              await supabaseAdmin.from('bookings').delete().eq('id', sub.id);
+            } else {
+              console.error('Admin Push Notification Error:', err);
+            }
+          }
+        });
 
-          await Promise.all(pushPromises);
-        }
-      } catch (err) {
-        console.error('Admin Web Push Process Error:', err);
+        await Promise.all(pushPromises);
       }
-    })();
+    } catch (err) {
+      console.error('Admin Web Push Process Error:', err);
+    }
 
     // 📧 Send confirmation to user (background)
     // Removed because the user only wants notification on approval

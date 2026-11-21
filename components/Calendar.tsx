@@ -165,9 +165,27 @@ export default function Calendar({ bookings }: CalendarProps) {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        const cancelledId = requestModal.booking.id;
+        try {
+          const pendingSession = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+          const pendingLocal = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+          sessionStorage.setItem(
+            'pending_bookings',
+            JSON.stringify(pendingSession.filter((id: string) => id !== cancelledId))
+          );
+          localStorage.setItem(
+            'pending_bookings',
+            JSON.stringify(pendingLocal.filter((id: string) => id !== cancelledId))
+          );
+        } catch {
+          // ignore storage error
+        }
+        setSelectedDateBookings((prev) =>
+          prev ? prev.filter((b) => b.id !== cancelledId) : null
+        );
+        window.dispatchEvent(new CustomEvent('booking-status-updated'));
         toast.success('ยกเลิกการจองสำเร็จ', 'รายการจองถูกยกเลิกแล้ว', 4000);
         setRequestModal({ ...requestModal, isOpen: false, contactInfo: '' });
-        // Optionally, refresh bookings here if possible, or wait for polling.
       } else {
         toast.error('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถส่งคำขอได้');
       }

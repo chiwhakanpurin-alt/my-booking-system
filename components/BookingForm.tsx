@@ -90,9 +90,22 @@ export default function BookingForm() {
     }
 
     const subscribeToPush = async () => {
+      // 1. Check cached subscription from initial permission prompt first
+      try {
+        const cached = localStorage.getItem('cached_push_subscription');
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch {
+        // ignore cache error
+      }
+
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
       try {
-        const permission = await Notification.requestPermission();
+        const permission =
+          Notification.permission === 'granted'
+            ? 'granted'
+            : await Notification.requestPermission();
         if (permission !== 'granted') return null;
         const registration = await navigator.serviceWorker.ready;
         const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -107,12 +120,17 @@ export default function BookingForm() {
         }
 
         const existingSub = await registration.pushManager.getSubscription();
-        if (existingSub) return existingSub;
+        if (existingSub) {
+          localStorage.setItem('cached_push_subscription', JSON.stringify(existingSub));
+          return existingSub;
+        }
 
-        return await registration.pushManager.subscribe({
+        const newSub = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: outputArray
         });
+        localStorage.setItem('cached_push_subscription', JSON.stringify(newSub));
+        return newSub;
       } catch (err) {
         console.error('Push sub error:', err);
         return null;
@@ -124,7 +142,7 @@ export default function BookingForm() {
       const pushSubscription = await subscribeToPush();
 
       let successCount = 0;
-      let anySuccessData = null;
+      const createdIds: string[] = [];
 
       if (bookingMode === 'single') {
         const payload = {
@@ -144,7 +162,7 @@ export default function BookingForm() {
 
         if (response.ok && data.success) {
           successCount++;
-          anySuccessData = data.data;
+          if (data.data?.id) createdIds.push(data.data.id);
         } else {
           toast.error('บันทึกไม่สำเร็จ', data.message || 'กรุณาลองใหม่อีกครั้ง');
           setLoading(false);
@@ -169,7 +187,7 @@ export default function BookingForm() {
           const data = await response.json();
           if (response.ok && data.success) {
             successCount++;
-            anySuccessData = data.data;
+            if (data.data?.id) createdIds.push(data.data.id);
           } else {
             toast.error(`บันทึกวันที่ ${d.date} ไม่สำเร็จ`, data.message || 'กรุณาลองใหม่อีกครั้ง');
             if (successCount === 0) {
@@ -181,15 +199,18 @@ export default function BookingForm() {
       }
 
       if (successCount > 0) {
-        // Store booking ID in sessionStorage to show notifications only to this user
+        // Store booking ID in localStorage & sessionStorage to show notifications to this user device even after closing browser
         try {
-          const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
-          if (anySuccessData?.id) {
-            pending.push(anySuccessData.id);
-            sessionStorage.setItem('pending_bookings', JSON.stringify(pending));
+          const pendingSession = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+          const pendingLocal = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+          for (const id of createdIds) {
+            if (!pendingSession.includes(id)) pendingSession.push(id);
+            if (!pendingLocal.includes(id)) pendingLocal.push(id);
           }
+          sessionStorage.setItem('pending_bookings', JSON.stringify(pendingSession));
+          localStorage.setItem('pending_bookings', JSON.stringify(pendingLocal));
         } catch (e) {
-          console.error('Failed to save to sessionStorage', e);
+          console.error('Failed to save to storage', e);
         }
 
         toast.success('ส่งคำขอจองสำเร็จ! 🎉', 'ระบบรออนุมัติจากผู้ดูแล กำลังพากลับหน้าหลัก...', 3000);

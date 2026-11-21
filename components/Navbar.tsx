@@ -7,8 +7,9 @@ import { CalendarDays, LayoutDashboard, UserCheck, LogOut } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { LiquidToggle, NimbusToggleIcons } from '@/components/ui/liquid-glass-toggle';
 
-// Lazy-load the bell — it connects WebSocket only for logged-in admins
+// Lazy-load the bell & status watcher
 const NotificationBell = dynamic(() => import('@/components/NotificationBell'), { ssr: false });
+const BookingStatusWatcher = dynamic(() => import('@/components/BookingStatusWatcher'), { ssr: false });
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -139,8 +140,9 @@ export default function Navbar() {
                 label="Toggle dark mode"
               />
 
-              {/* Notification bell — visible only when admin is logged in */}
-              {isAdmin && <NotificationBell />}
+              {/* Notification bell & Initial permission modal — shown for both users and admins */}
+              <NotificationBell isAdmin={isAdmin} />
+              <BookingStatusWatcher />
 
               {isAdmin && (
                 <button

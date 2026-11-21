@@ -9,8 +9,10 @@
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, X, CalendarDays, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { playNotificationChime, triggerBrowserNotification } from '@/components/NotificationBell';
 
 interface StatusUpdate {
   id: string;
@@ -148,6 +150,7 @@ function StatusPopup({ item, onDismiss }: { item: PopupItem; onDismiss: (key: st
 export default function BookingStatusWatcher() {
   const [popups, setPopups] = useState<PopupItem[]>([]);
   const isFirst = useRef(true);
+  const notifiedIds = useRef<Set<string>>(new Set());
 
   const dismissPopup = useCallback((key: string) => {
     setPopups((prev) => prev.map((p) => (p.key === key ? { ...p, visible: false } : p)));
@@ -156,10 +159,24 @@ export default function BookingStatusWatcher() {
 
   const showPopup = useCallback(
     (update: StatusUpdate) => {
+      if (notifiedIds.current.has(update.id)) return;
+      notifiedIds.current.add(update.id);
+
       const key = `${update.id}-${Date.now()}`;
+      playNotificationChime();
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         navigator.vibrate([150, 80, 150]);
       }
+
+      const isApproved = update.status === 'อนุมัติแล้ว' || update.status === 'approved';
+      triggerBrowserNotification(
+        isApproved ? '✅ การจองของคุณได้รับอนุมัติแล้ว!' : '❌ การจองของคุณถูกยกเลิก',
+        `${update.activity_name} (${update.room_name}) · ${formatThaiDate(update.booking_date)}`,
+        '/'
+      );
+
+      window.dispatchEvent(new CustomEvent('booking-status-updated'));
+
       setPopups((prev) => [...prev, { key, update, visible: false }]);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -172,6 +189,57 @@ export default function BookingStatusWatcher() {
   );
 
   useEffect(() => {
+    const checkPendingBookings = async () => {
+      try {
+        if (localStorage.getItem('notification_consent_status') === 'denied') return;
+
+        const pendingSession = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+        const pendingLocal = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+        const allPending: string[] = Array.from(new Set([...pendingSession, ...pendingLocal])).filter(Boolean);
+
+        if (allPending.length === 0) return;
+
+        const res = await fetch(`/api/bookings?ids=${encodeURIComponent(allPending.join(','))}`, {
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.success || !Array.isArray(json.data)) return;
+
+        const bookings: StatusUpdate[] = json.data;
+        let remainingPending = [...allPending];
+
+        for (const b of bookings) {
+          const isActionable =
+            b.status === 'อนุมัติแล้ว' ||
+            b.status === 'approved' ||
+            b.status === 'ยกเลิก' ||
+            b.status === 'cancelled';
+
+          if (isActionable && remainingPending.includes(b.id)) {
+            remainingPending = remainingPending.filter((id) => id !== b.id);
+            sessionStorage.setItem('pending_bookings', JSON.stringify(remainingPending));
+            localStorage.setItem('pending_bookings', JSON.stringify(remainingPending));
+            showPopup(b);
+          }
+        }
+      } catch {
+        // ignore network poll errors
+      }
+    };
+
+    checkPendingBookings();
+    const pollInterval = setInterval(checkPendingBookings, 4000);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        checkPendingBookings();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', checkPendingBookings);
+    window.addEventListener('notification-consent-granted', checkPendingBookings);
+
     const channel = supabase
       .channel('public-booking-status-watch')
       .on(
@@ -179,6 +247,8 @@ export default function BookingStatusWatcher() {
         { event: 'UPDATE', schema: 'public', table: 'bookings' },
         (payload) => {
           if (isFirst.current) return;
+          if (localStorage.getItem('notification_consent_status') === 'denied') return;
+
           const updated = payload.new as StatusUpdate;
           const prev = payload.old as { status?: string };
 
@@ -191,11 +261,15 @@ export default function BookingStatusWatcher() {
 
           if (changed && isActionable) {
             try {
-              const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
-              if (pending.includes(updated.id)) {
-                showPopup(updated);
-                const newPending = pending.filter((id: string) => id !== updated.id);
+              const pendingSession = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
+              const pendingLocal = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+              const allPending = Array.from(new Set([...pendingSession, ...pendingLocal]));
+
+              if (allPending.includes(updated.id)) {
+                const newPending = allPending.filter((id: string) => id !== updated.id);
                 sessionStorage.setItem('pending_bookings', JSON.stringify(newPending));
+                localStorage.setItem('pending_bookings', JSON.stringify(newPending));
+                showPopup(updated);
               }
             } catch (e) {
               console.error('Failed to parse pending_bookings', e);
@@ -211,17 +285,22 @@ export default function BookingStatusWatcher() {
 
     return () => {
       clearTimeout(t);
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', checkPendingBookings);
+      window.removeEventListener('notification-consent-granted', checkPendingBookings);
       supabase.removeChannel(channel);
     };
   }, [showPopup]);
 
-  if (popups.length === 0) return null;
+  if (popups.length === 0 || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2.5 pointer-events-none">
       {popups.map((item) => (
         <StatusPopup key={item.key} item={item} onDismiss={dismissPopup} />
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }

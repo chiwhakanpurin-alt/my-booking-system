@@ -94,24 +94,40 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. 🚀 Send Push Notification to user (wait for it to finish)
+    // 5. 🚀 Send Push Notification to user (wait for it to finish so Vercel doesn't freeze before sending)
     if (pushSubscription) {
       try {
-        const title = status === 'อนุมัติแล้ว'
-          ? '✅ อนุมัติการจองแล้ว!'
-          : '❌ ยกเลิกการจอง';
+        const isApproved = status === 'อนุมัติแล้ว';
+        const title = isApproved
+          ? '✅ การจองของคุณได้รับการอนุมัติแล้ว!'
+          : '❌ การจองของคุณถูกยกเลิก';
 
-        let bodyMsg = status === 'อนุมัติแล้ว'
-          ? `การจองห้อง ${bookingData.room_name} ของคุณได้รับการอนุมัติแล้ว`
-          : `การจองห้อง ${bookingData.room_name} ของคุณถูกยกเลิก`;
+        let bodyMsg = isApproved
+          ? `ห้อง: ${bookingData.room_name}\nกิจกรรม: ${bookingData.activity_name || '-'}`
+          : `ห้อง: ${bookingData.room_name} ถูกปฏิเสธ/ยกเลิก`;
 
-        if (status === 'ยกเลิก' && reason) {
+        if (!isApproved && reason) {
           bodyMsg += `\nหมายเหตุ: ${reason}`;
         }
 
-        await webpush.sendNotification(pushSubscription, JSON.stringify({ title, body: bodyMsg }));
-      } catch (err) {
-        console.error('Push Notification Error:', err);
+        const pushPayload = JSON.stringify({
+          title,
+          body: bodyMsg,
+          icon: '/school-logo.png',
+          badge: '/school-logo.png',
+          tag: `booking-status-${bookingData.id}`,
+          data: {
+            url: '/',
+          },
+        });
+
+        await webpush.sendNotification(pushSubscription, pushPayload);
+      } catch (err: any) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          console.warn('Push subscription expired or unsubscribed:', err.statusCode);
+        } else {
+          console.error('Push Notification Error:', err);
+        }
       }
     } else {
       console.log('No push subscription found for user', extractedEmail);

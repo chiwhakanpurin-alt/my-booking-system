@@ -6,7 +6,6 @@ import Navbar from '@/components/Navbar';
 import DashboardStats from '@/components/DashboardStats';
 import RoomUsageStats from '@/components/RoomUsageStats';
 import Calendar from '@/components/Calendar';
-import BookingStatusWatcher from '@/components/BookingStatusWatcher';
 import { CalendarPlus, ShieldAlert, Loader2, BookOpen, X } from 'lucide-react';
 
 interface Booking {
@@ -50,13 +49,18 @@ export default function Home() {
 
   useEffect(() => {
     fetchBookings();
+    const handleStatusUpdated = () => {
+      fetchBookings();
+    };
+    window.addEventListener('booking-status-updated', handleStatusUpdated);
+    return () => {
+      window.removeEventListener('booking-status-updated', handleStatusUpdated);
+    };
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">
       <Navbar />
-      {/* Real-time booking status watcher for visitors/bookers */}
-      <BookingStatusWatcher />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
         {/* Welcome Hero Banner */}
