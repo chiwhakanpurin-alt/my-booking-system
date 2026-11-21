@@ -270,8 +270,8 @@ export default function Calendar({ bookings }: CalendarProps) {
                 key={idx}
                 onClick={() => handleDateClick(day, isCurrentMonth)}
                 className={`relative flex flex-col h-14 sm:h-20 w-full justify-between p-1.5 sm:p-2.5 text-left rounded-2xl border transition-all select-none cursor-pointer outline-none group ${isCurrentMonth
-                    ? 'bg-white/40 dark:bg-zinc-900/30 border-slate-200/50 dark:border-zinc-800/40 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10 hover:border-indigo-200/70 dark:hover:border-indigo-900/40'
-                    : 'bg-slate-50/10 dark:bg-zinc-950/10 border-slate-100/30 dark:border-zinc-900/20 text-slate-300 dark:text-zinc-700 hover:border-indigo-100'
+                  ? 'bg-white/40 dark:bg-zinc-900/30 border-slate-200/50 dark:border-zinc-800/40 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10 hover:border-indigo-200/70 dark:hover:border-indigo-900/40'
+                  : 'bg-slate-50/10 dark:bg-zinc-950/10 border-slate-100/30 dark:border-zinc-900/20 text-slate-300 dark:text-zinc-700 hover:border-indigo-100'
                   } ${dayIsToday
                     ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-zinc-950 border-indigo-400! dark:border-indigo-500!'
                     : ''
@@ -279,10 +279,10 @@ export default function Calendar({ bookings }: CalendarProps) {
               >
                 {/* Day Number */}
                 <span className={`text-xs sm:text-sm font-semibold leading-none ${dayIsToday
-                    ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                    : isCurrentMonth
-                      ? 'text-slate-800 dark:text-zinc-200'
-                      : 'text-slate-400 dark:text-zinc-600'
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                  : isCurrentMonth
+                    ? 'text-slate-800 dark:text-zinc-200'
+                    : 'text-slate-400 dark:text-zinc-600'
                   }`}>
                   {day}
                 </span>
@@ -356,8 +356,8 @@ export default function Calendar({ bookings }: CalendarProps) {
                         <DoorOpen className="h-3.5 w-3.5 text-indigo-500" />
                         สถานะห้องประชุมวันนี้
                         <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${freeCount > 0
-                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+                          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
                           }`}>
                           {freeCount > 0 ? `ว่าง ${freeCount} ห้อง` : 'ไม่มีห้องว่าง'}
                         </span>
@@ -385,8 +385,8 @@ export default function Calendar({ bookings }: CalendarProps) {
                             <div
                               key={room}
                               className={`flex items-center justify-between px-3 py-2 rounded-lg border ${status === 'available'
-                                  ? 'bg-white/70 dark:bg-zinc-900/50 border-slate-200/50 dark:border-zinc-700/30'
-                                  : 'bg-white/50 dark:bg-zinc-900/30 border-slate-200/40 dark:border-zinc-700/20'
+                                ? 'bg-white/70 dark:bg-zinc-900/50 border-slate-200/50 dark:border-zinc-700/30'
+                                : 'bg-white/50 dark:bg-zinc-900/30 border-slate-200/40 dark:border-zinc-700/20'
                                 }`}
                             >
                               <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">

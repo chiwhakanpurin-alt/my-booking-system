@@ -4,13 +4,8 @@
  * BookingStatusWatcher
  *
  * Mounted on the main home page. Watches Supabase Realtime for UPDATE events
- * on the bookings table and shows a TikTok-style popup to the booker when
- * their booking's status changes (approved / cancelled).
- *
- * The booker's identity is matched by checking if the local browser's
- * "pending booking" (stored in sessionStorage after they submit) matches
- * the updated record.  This is client-side only — no personal data is
- * stored on the server beyond what is already in the DB.
+ * on the bookings table and shows an iOS / LINE style top notification banner
+ * when their booking's status changes (approved / cancelled).
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -43,9 +38,12 @@ function formatThaiDate(dateStr: string) {
   const day = parseInt(parts[2]);
   return `${day} ${months[month]} ${year}`;
 }
-function formatTime(t: string) { return t.substring(0, 5); }
 
-/* ─── Single status popup card ─── */
+function formatTime(t: string) {
+  return t ? t.substring(0, 5) : '';
+}
+
+/* ─── iOS / LINE Style Top Notification Banner ─── */
 function StatusPopup({ item, onDismiss }: { item: PopupItem; onDismiss: (key: string) => void }) {
   const { update, visible } = item;
   const isApproved = update.status === 'อนุมัติแล้ว' || update.status === 'approved';
@@ -53,89 +51,115 @@ function StatusPopup({ item, onDismiss }: { item: PopupItem; onDismiss: (key: st
   return (
     <div
       style={{
-        transform: visible ? 'translateX(0) scale(1)' : 'translateX(calc(100% + 32px)) scale(0.95)',
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(-140%) scale(0.92)',
         opacity: visible ? 1 : 0,
-        transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease',
+        transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease',
       }}
-      className="w-80 sm:w-96 pointer-events-auto"
+      className="w-[92vw] max-w-[420px] pointer-events-auto"
       role="alert"
       aria-live="assertive"
     >
-      <div className={`relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl bg-white/95 dark:bg-zinc-900/95 ${
-        isApproved
-          ? 'border-emerald-200/60 dark:border-emerald-800/50 shadow-emerald-500/15'
-          : 'border-rose-200/60 dark:border-rose-800/50 shadow-rose-500/15'
-      }`}>
-        {/* Colored bar */}
-        <div className={`h-1 w-full ${isApproved ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-rose-400 to-orange-400'}`} />
-
-        <div className="flex items-start gap-3 p-4">
-          {/* Icon */}
-          <div className={`shrink-0 h-10 w-10 rounded-xl flex items-center justify-center shadow-md ${
-            isApproved
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/20'
-              : 'bg-gradient-to-br from-rose-500 to-orange-500 shadow-rose-500/20'
-          }`}>
-            {isApproved
-              ? <CheckCircle2 className="h-5 w-5 text-white" />
-              : <XCircle className="h-5 w-5 text-white" />
-            }
+      <div
+        onClick={() => onDismiss(item.key)}
+        className="relative overflow-hidden rounded-[26px] border border-white/50 dark:border-zinc-700/60 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 px-4 py-3.5 cursor-pointer select-none"
+      >
+        <div className="flex items-start gap-3.5">
+          {/* App Icon (iOS Banner Style) */}
+          <div className="relative shrink-0 mt-0.5">
+            <img
+              src="/school-logo.png"
+              alt="App Icon"
+              className="h-11 w-11 rounded-2xl object-cover shadow-sm bg-white p-0.5 border border-slate-100 dark:border-zinc-800"
+            />
+            <span
+              className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow ${
+                isApproved ? 'bg-emerald-500' : 'bg-rose-500'
+              }`}
+            >
+              {isApproved ? (
+                <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+              ) : (
+                <XCircle className="h-3.5 w-3.5 text-white" />
+              )}
+            </span>
           </div>
 
+          {/* Notification Content */}
           <div className="flex-1 min-w-0">
+            {/* Top Header Row: App Name & "ตอนนี้" */}
             <div className="flex items-center justify-between gap-2">
-              <p className={`text-xs font-black uppercase tracking-wide ${isApproved ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {isApproved ? '✅ การจองได้รับการอนุมัติ!' : '❌ การจองถูกยกเลิก'}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 tracking-tight">
+                  ระบบจองห้องประชุม
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-zinc-500">• ตอนนี้</span>
+              </div>
               <button
-                onClick={() => onDismiss(item.key)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDismiss(item.key);
+                }}
                 aria-label="ปิด"
-                className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+                className="shrink-0 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-1">
-              {update.activity_name}
+            {/* Title (LINE Message Style) */}
+            <p
+              className={`text-sm font-extrabold leading-tight mt-0.5 ${
+                isApproved
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {isApproved ? '✅ การจองของคุณได้รับอนุมัติแล้ว!' : '❌ การจองของคุณถูกยกเลิก'}
             </p>
 
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400">
-                <CalendarDays className="h-3 w-3 shrink-0" />
-                <span>{formatThaiDate(update.booking_date)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400">
-                <Clock className="h-3 w-3 shrink-0" />
-                <span>{formatTime(update.start_time)}–{formatTime(update.end_time)} น.</span>
-              </div>
-            </div>
+            {/* Activity & Room Details */}
+            <p className="mt-1 text-xs font-bold text-slate-800 dark:text-zinc-100 line-clamp-1">
+              {update.activity_name} ({update.room_name})
+            </p>
 
-            {isApproved && (
-              <p className="mt-2.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                🎉 กรุณาเตรียมตัวให้พร้อมก่อนเวลา
-              </p>
-            )}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-zinc-400">
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays className="h-3 w-3 shrink-0" />
+                {formatThaiDate(update.booking_date)}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3 shrink-0" />
+                {formatTime(update.start_time)}–{formatTime(update.end_time)} น.
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Bottom iOS Grabber Pill */}
+        <div className="mt-2.5 flex justify-center">
+          <div className="h-1 w-9 rounded-full bg-slate-300/80 dark:bg-zinc-700/80" />
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── Main watcher (no visible UI beyond the popup) ─── */
+/* ─── Main watcher ─── */
 export default function BookingStatusWatcher() {
   const [popups, setPopups] = useState<PopupItem[]>([]);
   const isFirst = useRef(true);
 
   const dismissPopup = useCallback((key: string) => {
     setPopups((prev) => prev.map((p) => (p.key === key ? { ...p, visible: false } : p)));
-    setTimeout(() => setPopups((prev) => prev.filter((p) => p.key !== key)), 400);
+    setTimeout(() => setPopups((prev) => prev.filter((p) => p.key !== key)), 450);
   }, []);
 
   const showPopup = useCallback(
     (update: StatusUpdate) => {
       const key = `${update.id}-${Date.now()}`;
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([150, 80, 150]);
+      }
       setPopups((prev) => [...prev, { key, update, visible: false }]);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -148,7 +172,6 @@ export default function BookingStatusWatcher() {
   );
 
   useEffect(() => {
-    // Subscribe to UPDATE events — status column changes
     const channel = supabase
       .channel('public-booking-status-watch')
       .on(
@@ -159,7 +182,6 @@ export default function BookingStatusWatcher() {
           const updated = payload.new as StatusUpdate;
           const prev = payload.old as { status?: string };
 
-          // Only fire when status actually changed to approved or cancelled
           const changed = updated.status !== prev.status;
           const isActionable =
             updated.status === 'อนุมัติแล้ว' ||
@@ -172,7 +194,6 @@ export default function BookingStatusWatcher() {
               const pending = JSON.parse(sessionStorage.getItem('pending_bookings') || '[]');
               if (pending.includes(updated.id)) {
                 showPopup(updated);
-                // Remove from pending once handled
                 const newPending = pending.filter((id: string) => id !== updated.id);
                 sessionStorage.setItem('pending_bookings', JSON.stringify(newPending));
               }
@@ -184,7 +205,9 @@ export default function BookingStatusWatcher() {
       )
       .subscribe();
 
-    const t = setTimeout(() => { isFirst.current = false; }, 1500);
+    const t = setTimeout(() => {
+      isFirst.current = false;
+    }, 1500);
 
     return () => {
       clearTimeout(t);
@@ -195,7 +218,7 @@ export default function BookingStatusWatcher() {
   if (popups.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9998] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2.5 pointer-events-none">
       {popups.map((item) => (
         <StatusPopup key={item.key} item={item} onDismiss={dismissPopup} />
       ))}

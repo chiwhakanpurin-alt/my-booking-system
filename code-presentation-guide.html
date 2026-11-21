@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คู่มือนำเสนอระบบ, Source Code & เตรียมสอบสัมภาษณ์ - ระบบจองห้องประชุม</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+    @page {
+      size: A4;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Sukhumvit Set', 'Thonburi', -apple-system, sans-serif;
+      font-size: 12px;
+      line-height: 1.48;
+      color: #1e293b;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #ec4899 100%);
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.22);
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .header-title {
+      font-size: 18.5px;
+      font-weight: 700;
+      margin: 0 0 2px 0;
+      line-height: 1.3;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      opacity: 0.95;
+      margin: 0;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 10.5px;
+    }
+
+    /* Section Styles */
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-top: 0;
+      margin-bottom: 8px;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    .section-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #2563eb;
+      color: #ffffff;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Workflow Box */
+    .workflow-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .workflow-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #ec4899;
+      border-radius: 6px;
+      padding: 6px 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .workflow-num {
+      background: #ec4899;
+      color: white;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Step Card */
+    .step-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #2563eb;
+      border-radius: 7px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin: 0;
+    }
+
+    .time-badge {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .file-list {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 5px 9px;
+      margin: 4px 0;
+      font-size: 11.5px;
+    }
+
+    .file-list ul {
+      margin: 2px 0 0 0;
+      padding-left: 16px;
+    }
+
+    .file-list li {
+      margin-bottom: 1.5px;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+
+    .speech-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 5px;
+      padding: 5px 9px;
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: #1e3a8a;
+    }
+
+    .speech-label {
+      font-weight: 700;
+      color: #1d4ed8;
+      font-size: 10.5px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4px 0 8px 0;
+      font-size: 11px;
+    }
+
+    tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background: #1e293b;
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 5px 8px;
+      border: 1px solid #1e293b;
+    }
+
+    td {
+      padding: 5px 8px;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* Problem & Q&A Cards */
+    .problem-card {
+      background: #ffffff;
+      border: 1px solid #fed7aa;
+      border-left: 4px solid #f97316;
+      border-radius: 7px;
+      padding: 6px 10px;
+      margin-bottom: 5px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .problem-title {
+      font-weight: 700;
+      color: #9a3412;
+      font-size: 12.2px;
+      margin-bottom: 2px;
+    }
+
+    .problem-body {
+      font-size: 11.2px;
+      color: #334155;
+      background: #fff7ed;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+
+    .qa-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #10b981;
+      border-radius: 7px;
+      padding: 5px 10px;
+      margin-bottom: 4.5px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .qa-question {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 12px;
+      margin-bottom: 1.5px;
+    }
+
+    .qa-answer {
+      font-size: 11px;
+      color: #334155;
+      background: #f0fdf4;
+      padding: 3.5px 8px;
+      border-radius: 5px;
+    }
+
+    .page-break-section {
+      break-before: page;
+      page-break-before: always;
+      padding-top: 6px;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 10px;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- PAGE 1: OVERVIEW + WORKFLOW + QUICK CHECKLIST TABLE -->
+    <div class="header-banner">
+      <div class="header-badge">Complete Presentation & Interview Guide</div>
+      <h1 class="header-title">คู่มือนำเสนอระบบ, Source Code & เตรียมสอบสัมภาษณ์</h1>
+      <p class="header-subtitle">ระบบจองห้องประชุมออนไลน์ โรงเรียนพรหมคีรีพิทยาคม (My Booking System)</p>
+      <div class="header-meta">
+        <span><strong>Framework:</strong> Next.js 16 (App Router) + React 19</span>
+        <span><strong>Database & Realtime:</strong> Supabase (PostgreSQL + RLS)</span>
+        <span><strong>Security:</strong> JWT (HMAC SHA-256) + HTTP-Only Cookie + Rate Limit</span>
+      </div>
+    </div>
+
+    <!-- SECTION 1: HOW THE WEBSITE WORKS (5 STEPS) -->
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">1</span> หลักการทำงานของเว็บตั้งแต่ต้นจนจบ (5 ขั้นตอนหลัก)
+      </h2>
+      <div class="workflow-grid">
+        <div class="workflow-item">
+          <div class="workflow-num">1</div>
+          <div>
+            <strong>หน้าแรกเช็คคิวว่าง:</strong> ผู้ใช้เปิดเว็บเข้ามาที่หน้าแรก (<code>app/page.tsx</code>)
+            เว็บจะดึงข้อมูลจากฐานข้อมูล <strong>Supabase</strong> มาแสดงเป็นสถิติและปฏิทิน
+            (<code>components/Calendar.tsx</code>) ให้เห็นทันทีว่าวันไหนมีห้องไหน <strong>🟢 ว่าง</strong>, <strong>🟡
+              รออนุมัติ</strong>, หรือ <strong>🔴 จองแล้ว</strong>
+          </div>
+        </div>
+        <div class="workflow-item">
+          <div class="workflow-num">2</div>
+          <div>
+            <strong>กรอกฟอร์มจองห้องประชุม:</strong> เมื่อกดปุ่มจอง จะเข้าสู่หน้าฟอร์ม
+            (<code>components/BookingForm.tsx</code>) ให้กรอกชื่อกิจกรรม ชื่อผู้จอง กลุ่มสาระ เบอร์โทร เลือกห้องประชุม
+            และเลือกวัน-เวลา (รองรับทั้งจองวันเดียว และจองหลายวันพร้อมกัน)
+          </div>
+        </div>
+        <div class="workflow-item">
+          <div class="workflow-num">3</div>
+          <div>
+            <strong>ระบบหลังบ้านเช็คเวลาชนกัน & บันทึกข้อมูล:</strong> ข้อมูลวิ่งไปที่
+            <code>app/api/bookings/route.ts</code> เพื่อเช็คว่าห้องนั้นในวันและเวลานั้นว่างจริงไหม
+            (มีคิวอื่นจองทับเวลาอยู่หรือไม่) ถ้าว่างจะบันทึกเป็นสถานะ <strong>"รออนุมัติ"</strong> แล้วส่ง <strong>Email
+              + Web Push Notification</strong> ไปแจ้งแอดมินทันที
+          </div>
+        </div>
+        <div class="workflow-item">
+          <div class="workflow-num">4</div>
+          <div>
+            <strong>แอดมินตรวจสอบและกดอนุมัติ/ยกเลิก:</strong> แอดมินล็อกอินด้วยรหัสผ่านเข้าหน้าจัดการ
+            (<code>app/admin/page.tsx</code>) เพื่อดูรายละเอียดคำขอจอง แล้วเลือกกด <strong>"อนุมัติแล้ว"</strong> หรือ
+            <strong>"ยกเลิก"</strong> (พร้อมระบุเหตุผล)
+          </div>
+        </div>
+        <div class="workflow-item">
+          <div class="workflow-num">5</div>
+          <div>
+            <strong>แจ้งผลกลับหาผู้จองทันที & ออกรายงานสรุป:</strong> ทันทีที่แอดมินกดอนุมัติ/ยกเลิก
+            เว็บจะส่งแจ้งเตือนเด้งไปที่หน้าจอและมือถือของผู้จองแบบ <strong>Real-time</strong>
+            (<code>components/BookingStatusWatcher.tsx</code>) ปฏิทินอัปเดตทันที และแอดมินสามารถกดปุ่ม
+            <strong>Export</strong> (<code>components/ExportModal.tsx</code>) ออกมาเป็นไฟล์ <strong>Excel
+              (.xlsx)</strong> หรือพิมพ์ใบสรุปสถิติรายเดือนได้ทันที <em>(หากผู้จองต้องการยกเลิกเอง
+              ก็คลิกในปฏิทินแล้วกรอกเบอร์โทรที่ใช้จองเพื่อยกเลิกได้เลย)</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: QUICK SUMMARY TABLE -->
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">2</span> ตารางสรุปลำดับการเปิดไฟล์โชว์กรรมการ (Quick
+        Checklist)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 12%;">ลำดับ</th>
+            <th style="width: 26%;">หัวข้อที่นำเสนอ</th>
+            <th style="width: 34%;">ไฟล์ที่ต้องเปิดใน VS Code</th>
+            <th style="width: 28%;">จุดเด่นที่ชี้ให้กรรมการดู</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ช่วงที่ 1</strong><br>(1-2 นาที)</td>
+            <td>ภาพรวมสถาปัตยกรรม & Tech Stack</td>
+            <td><code>package.json</code><br>โครงสร้างโฟลเดอร์ <code>app/</code>, <code>lib/</code></td>
+            <td>ใช้ Next.js 16, React 19, Supabase, Web Push, Nodemailer, XLSX</td>
+          </tr>
+          <tr>
+            <td><strong>ช่วงที่ 2</strong><br>(2-3 นาที)</td>
+            <td>หน้าแรก, เช็คห้องว่าง & การซ่อนข้อมูลส่วนบุคคล (PDPA)</td>
+            <td><code>app/page.tsx</code><br><code>components/Calendar.tsx</code> (บรรทัด 34–56,
+              351–408)<br><code>app/api/bookings/route.ts</code> (บรรทัด 54–70)</td>
+            <td><code>getRoomAvailability</code> เช็คห้องว่าง/ไม่ว่าง และถ้าไม่ใช่ Admin จะไม่ดึงคอลัมน์
+              <code>details</code> ป้องกันเบอร์โทรหลุด</td>
+          </tr>
+          <tr>
+            <td><strong>ช่วงที่ 3</strong><br>(3-4 นาที)</td>
+            <td>ฟอร์มการจอง & ลอจิกเช็คเวลาชนกัน (Overlap Check)</td>
+            <td><code>components/BookingForm.tsx</code><br><code>app/api/bookings/route.ts</code> (บรรทัด 89–199)</td>
+            <td>จองได้ทั้งวันเดียว/หลายวัน, Rate Limit 5 ครั้ง/นาที, เช็คเวลาซ้อนทับ, ป้องกัน XSS</td>
+          </tr>
+          <tr>
+            <td><strong>ช่วงที่ 4</strong><br>(3-4 นาที)</td>
+            <td>ระบบความปลอดภัย & การยืนยันตัวตน Admin</td>
+            <td><code>app/api/admin/login/route.ts</code><br><code>lib/jwt.ts</code>,
+              <code>proxy.ts</code><br><code>supabase/security.sql</code></td>
+            <td>SHA-256 Password Hash, JWT ลง HTTP-Only Cookie, Proxy กั้นหน้า Admin, RLS บน DB</td>
+          </tr>
+          <tr>
+            <td><strong>ช่วงที่ 5</strong><br>(2-3 นาที)</td>
+            <td>การอนุมัติ, แจ้งเตือน Real-time & ออกรายงาน Excel</td>
+            <td><code>app/admin/page.tsx</code>,
+              <code>app/api/admin/update/route.ts</code><br><code>components/BookingStatusWatcher.tsx</code><br><code>components/ExportModal.tsx</code>
+            </td>
+            <td>อนุมัติแล้วยิง Web Push + Realtime Popup ทันที, ส่งออก Excel/พิมพ์สรุปราชการ</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 2: STEP-BY-STEP PRESENTATION (ALL 5 STEPS FIT ON PAGE 2) -->
+    <div class="section page-break-section">
+      <h2 class="section-title"><span class="section-icon">3</span> รายละเอียดการนำเสนอทีละขั้นตอน
+        (เปิดหน้าเว็บคู่กับโค้ด)</h2>
+
+      <!-- STEP 1 -->
+      <div class="step-card">
+        <div class="step-header">
+          <h3 class="step-title">ขั้นตอนที่ 1: แนะนำภาพรวมและโครงสร้างโปรเจกต์ (Architecture & Tech Stack)</h3>
+          <span class="time-badge">ใช้เวลา 1–2 นาที</span>
+        </div>
+        <div class="file-list">
+          <strong>📂 ไฟล์ที่เปิดโชว์:</strong> <code>package.json</code> (บรรทัด 11–24) และแถบ Explorer ด้านซ้าย
+          (<code>app/</code>, <code>components/</code>, <code>lib/</code>)
+        </div>
+        <div class="speech-box">
+          <span class="speech-label">🗣️ บทพูด:</span> "ระบบจองห้องประชุมออนไลน์ของโรงเรียนพรหมคีรีพิทยาคม พัฒนาแบบ
+          Full-stack ด้วย Next.js 16 (App Router) และ React 19 เชื่อมต่อฐานข้อมูล PostgreSQL บน Supabase โดยแยกส่วน
+          Frontend Component กับ Backend API Routes ชัดเจนเพื่อง่ายต่อการดูแลรักษาและปลอดภัยครับ"
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step-card">
+        <div class="step-header">
+          <h3 class="step-title">ขั้นตอนที่ 2: หน้าแรก, โค้ดเช็คห้องว่าง/ไม่ว่าง & การปกป้องข้อมูลส่วนบุคคล (PDPA)</h3>
+          <span class="time-badge">ใช้เวลา 2–3 นาที</span>
+        </div>
+        <div class="file-list">
+          <strong>📂 ไฟล์ที่เปิดโชว์:</strong>
+          <ul>
+            <li><code>components/Calendar.tsx</code> (บรรทัด 34–56 <code>getRoomAvailability</code> และบรรทัด 351–408) —
+              โค้ดคำนวณและแสดงป้าย <code>🟢 ว่าง</code>, <code>🟡 รออนุมัติ</code>, <code>🔴 จองแล้ว</code></li>
+            <li><code>app/api/bookings/route.ts</code> (บรรทัด 38–70 ในฟังก์ชัน <code>GET</code>) —
+              เช็คสิทธิ์ว่าถ้าเป็นผู้ใช้ทั่วไป ระบบจะตัดคอลัมน์ <code>details</code> ออกตั้งแต่ระดับ SQL SELECT</li>
+          </ul>
+        </div>
+        <div class="speech-box">
+          <span class="speech-label">🗣️ บทพูด:</span> "เมื่อคลิกวันที่ในปฏิทิน ฟังก์ชัน
+          <code>getRoomAvailability</code> ใน <code>Calendar.tsx</code> จะคำนวณสถานะของทั้ง 3 ห้องว่าว่าง รออนุมัติ
+          หรือจองแล้ว และจุดสำคัญคือเรื่อง PDPA ใน <code>app/api/bookings/route.ts</code> บรรทัด 54 ถ้าผู้เรียกไม่ใช่
+          Admin ที่มี JWT Cookie ระบบจะไม่ดึงคอลัมน์ <code>details</code> ที่เก็บเบอร์โทรศัพท์ออกมาเลย
+          ทำให้ข้อมูลส่วนบุคคลไม่รั่วไหลไปที่หน้าเว็บครับ"
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step-card">
+        <div class="step-header">
+          <h3 class="step-title">ขั้นตอนที่ 3: ระบบจองห้องประชุม & การตรวจสอบเวลาชนกัน (Booking & Overlap Logic)</h3>
+          <span class="time-badge">ใช้เวลา 3–4 นาที</span>
+        </div>
+        <div class="file-list">
+          <strong>📂 ไฟล์ที่เปิดโชว์:</strong>
+          <ul>
+            <li><code>components/BookingForm.tsx</code> (บรรทัด 29–118) — โหมดจองวันเดียว (<code>single</code>) /
+              หลายวัน (<code>multiple</code>) และการขอสิทธิ์ Web Push (<code>subscribeToPush</code>)</li>
+            <li><code>app/api/bookings/route.ts</code> (บรรทัด 89–199 <code>POST</code>) — 4 ด่านหลังบ้าน: <strong>(1)
+                บรรทัด 91–99 Rate Limit</strong> 5 ครั้ง/นาที, <strong>(2) บรรทัด 124–133 Date/Time Validation</strong>
+              ห้ามจองย้อนหลัง, <strong>(3) บรรทัด 135–152 Overlap Check</strong> เช็คเวลาชนกัน, <strong>(4) บรรทัด
+                154–159 XSS Sanitization</strong></li>
+          </ul>
+        </div>
+        <div class="speech-box">
+          <span class="speech-label">🗣️ บทพูด:</span> "เมื่อกดส่งฟอร์ม ข้อมูลจะวิ่งเข้า <code>POST /api/bookings</code>
+          ซึ่งตรวจสอบซ้ำที่ Server ทุกครั้ง เริ่มจาก Rate Limit กันสแปม, เช็ควันเวลาห้ามย้อนหลัง และหัวใจสำคัญคือบรรทัด
+          136 การเช็คเวลาชนกัน (Overlap Check) ด้วยสมการ <code>start_time &lt; end_time</code> และ
+          <code>end_time &gt; start_time</code> ถ้าไม่มีคิวชนกันจึงบันทึกเป็นสถานะ 'รออนุมัติ' แล้วส่ง Email และ Web
+          Push แจ้งแอดมินทันทีครับ"
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step-card">
+        <div class="step-header">
+          <h3 class="step-title">ขั้นตอนที่ 4: ระบบความปลอดภัยและการยืนยันตัวตนผู้ดูแลระบบ (Admin Auth & Security)</h3>
+          <span class="time-badge">ใช้เวลา 3–4 นาที</span>
+        </div>
+        <div class="file-list">
+          <strong>📂 ไฟล์ที่เปิดโชว์:</strong> <code>app/api/admin/login/route.ts</code> (บรรทัด 37–62),
+          <code>lib/jwt.ts</code> (HMAC SHA-256), <code>proxy.ts</code> (บรรทัด 5–31), และ
+          <code>supabase/security.sql</code> (RLS)
+        </div>
+        <div class="speech-box">
+          <span class="speech-label">🗣️ บทพูด:</span> "ความปลอดภัยแอดมินป้องกันไว้ 3 ชั้นครับ ชั้นแรกตอนล็อกอิน
+          รหัสผ่านถูกแปลงเป็น SHA-256 แล้วออก JWT Token ฝังใน HTTP-Only Cookie ซึ่งสคริปต์หน้าเว็บขโมยไม่ได้
+          ชั้นที่สองมี <code>proxy.ts</code> ดักตรวจ Cookie ทุกหน้าของ <code>/admin</code> และชั้นที่สามบน Supabase เปิด
+          Row Level Security (RLS) บังคับให้การแก้ไขหรือลบข้อมูลต้องทำผ่าน <code>supabaseAdmin</code> บน Server
+          เท่านั้นครับ"
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step-card">
+        <div class="step-header">
+          <h3 class="step-title">ขั้นตอนที่ 5: ระบบอนุมัติ, การแจ้งเตือน Real-time & การออกรายงานราชการ</h3>
+          <span class="time-badge">ใช้เวลา 2–3 นาที</span>
+        </div>
+        <div class="file-list">
+          <strong>📂 ไฟล์ที่เปิดโชว์:</strong> <code>app/admin/page.tsx</code>,
+          <code>app/api/admin/update/route.ts</code>, <code>components/BookingStatusWatcher.tsx</code> (Realtime), และ
+          <code>components/ExportModal.tsx</code> (Excel/Print)
+        </div>
+        <div class="speech-box">
+          <span class="speech-label">🗣️ บทพูด:</span> "เมื่อแอดมินกดอนุมัติหรือยกเลิก ระบบหลังบ้านใน
+          <code>/api/admin/update</code> จะส่ง Web Push กลับไปยังเครื่องผู้จองทันที และถ้าเปิดหน้าเว็บอยู่
+          <code>BookingStatusWatcher.tsx</code> ที่เชื่อมกับ Supabase Realtime
+          ก็จะเด้งป๊อปอัปแจ้งผลทันทีโดยไม่ต้องรีเฟรชหน้าเว็บ นอกจากนี้แอดมินยังกดปุ่มออกรายงานผ่าน
+          <code>ExportModal.tsx</code> เพื่อดาวน์โหลดไฟล์ Excel หรือพิมพ์สรุปสถิติรายเดือนได้ทันทีครับ"
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3: INTERVIEW PROBLEMS + Q&A (ALL FIT ON PAGE 3) -->
+    <div class="section page-break-section">
+      <h2 class="section-title"><span class="section-icon">4</span> ปัญหาที่เจอตอนพัฒนา & วิธีแก้ในโค้ด
+        (สำหรับตอบสัมภาษณ์)</h2>
+
+      <div class="problem-card">
+        <div class="problem-title">🔥 ปัญหาที่ 1: ครูเปิดลิงก์เว็บจากในแอป LINE / Facebook แล้วระบบแจ้งเตือน (Web Push)
+          ไม่ทำงาน</div>
+        <div class="problem-body">
+          <strong>• สาเหตุ:</strong> เวลาครูส่งลิงก์ต่อกันในแชท LINE หรือ Messenger แอปจะเปิดเว็บด้วย <em>In-App
+            Browser</em> ซึ่งบล็อกการทำงานของ Service Worker และ Web Push API
+          ทำให้ไม่ได้รับแจ้งเตือนตอนแอดมินอนุมัติ<br>
+          <strong>• วิธีแก้ (<code>components/InAppBrowserWarning.tsx</code>):</strong> เขียนโค้ดเช็ค
+          <code>navigator.userAgent</code> ทันทีที่เข้าเว็บ ถ้าตรวจพบว่าเปิดจาก <strong>LINE</strong>
+          ระบบจะเติมพารามิเตอร์ <code>?openExternalBrowser=1</code> ต่อท้าย URL แล้วสั่ง Redirect อัตโนมัติเพื่อให้แอป
+          LINE เด้งออกไปเปิดใน Safari/Chrome ทันที ส่วนถ้าเปิดจาก Facebook/IG จะแสดงหน้าต่างแนะนำให้กดเมนู 3
+          จุดเพื่อเปิดในเบราว์เซอร์หลัก
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-title">🔥 ปัญหาที่ 2: การจองเวลาเหลื่อมกัน (Overlapping Time) เช่น คนแรกจอง 09:00–11:00
+          คนที่สองจอง 10:00–12:00</div>
+        <div class="problem-body">
+          <strong>• สาเหตุ:</strong> หากเช็คแค่ว่าเวลาเริ่มต้นตรงกันไหม (<code>start_time == start_time</code>)
+          จะเกิดบั๊กเมื่อมีคนจองเวลาเหลื่อมกันหรือคร่อมเวลาของคนอื่น<br>
+          <strong>• วิธีแก้ (<code>app/api/bookings/route.ts</code> บรรทัด 135–152):</strong> ใช้สมการ <strong>Time
+            Interval Overlap</strong> ตรวจสอบที่ Server ก่อนบันทึก โดยเช็คว่าในห้องและวันเดียวกัน
+          มีรายการที่ยังไม่ยกเลิกซึ่งเข้าเงื่อนไข <code>start_time &lt; เวลาสิ้นสุดใหม่</code> <strong>และ</strong>
+          <code>end_time &gt; เวลาเริ่มใหม่</code> หรือไม่ วิธีนี้ป้องกันเวลาชนกันได้ครบทุกกรณี
+          และยังอนุญาตให้จองต่อคิวกันพอดี (เช่น เลิก 10:00 แล้วคนต่อไปเริ่ม 10:00) ได้อย่างถูกต้อง
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-title">🔥 ปัญหาที่ 3: โจทย์คือ "ไม่ต้องสมัครสมาชิก (No-Login)" แต่ต้องยกเลิกคิวตัวเองได้
+          และเบอร์โทรต้องไม่รั่วไหล (PDPA)</div>
+        <div class="problem-body">
+          <strong>• สาเหตุ:</strong> คุณครูไม่ต้องการจำรหัสผ่านหรือสมัครสมาชิกเพื่อจองห้องประชุม แต่ถ้าไม่มีระบบ Login
+          จะยืนยันตัวตนตอนขอยกเลิกอย่างไร และทำอย่างไรไม่ให้เบอร์โทรผู้จองหลุดไปแสดงให้คนอื่นเห็น<br>
+          <strong>• วิธีแก้ (<code>app/api/bookings/route.ts</code> & <code>request-change/route.ts</code>):</strong>
+          (1) ใช้ <strong>เบอร์โทรศัพท์ที่ใช้ตอนจอง</strong>
+          เป็นรหัสยืนยันตัวตนเมื่อต้องการกดยกเลิกการจองของตัวเองในปฏิทิน และ (2) ใน API ดึงข้อมูลตารางจอง
+          (<code>GET /api/bookings</code> บรรทัด 54–58) ถ้าผู้เรียกไม่มี JWT Cookie ของ Admin ระบบจะไม่ดึงคอลัมน์
+          <code>details</code> ออกจากฐานข้อมูลเลย ทำให้เบอร์โทรไม่หลุดไปที่ Network Tab ของเบราว์เซอร์ทั่วไป
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-title">🔥 ปัญหาที่ 4: ฐานข้อมูล Supabase (Free Tier) ถูกระงับอัตโนมัติ (Auto-pause)
+          เมื่อไม่มีคนเข้าเว็บช่วงปิดเทอม</div>
+        <div class="problem-body">
+          <strong>• สาเหตุ:</strong> Supabase แพ็กเกจฟรีจะหยุดทำงานชั่วคราว (Pause)
+          อัตโนมัติหากไม่มีการเชื่อมต่อฐานข้อมูลติดต่อกันเกิน 7 วัน เช่น ช่วงวันหยุดยาวหรือปิดเทอม<br>
+          <strong>• วิธีแก้ (<code>app/api/cron/keepalive/route.ts</code> & <code>vercel.json</code>):</strong> สร้าง
+          API เส้น <code>/api/cron/keepalive</code> ที่ยิง Query เบาๆ (<code>SELECT id LIMIT 1</code>) แล้วตั้งค่า
+          <strong>Vercel Cron Jobs</strong> ให้เรียกใช้งานอัตโนมัติทุกวันจันทร์และพฤหัสบดี
+          ทำให้ฐานข้อมูลตื่นและพร้อมใช้งานตลอดทั้งปีโดยไม่เสียค่าใช้จ่าย
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Q&A -->
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">5</span> เก็งคำถามกรรมการเพิ่มเติม (Q&A)</h2>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 1: ทำไมในโฟลเดอร์ <code>lib/</code> ถึงมีทั้ง <code>supabase.ts</code> และ
+          <code>supabase-admin.ts</code> ต่างกันอย่างไร?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> แยกตามระดับสิทธิ์ความปลอดภัย (Principle of Least Privilege) ครับ
+          <code>lib/supabase.ts</code> ใช้ Public Anon Key ซึ่งถูกจำกัดด้วย <strong>Row Level Security (RLS)</strong>
+          ให้ทำได้แค่ <code>SELECT</code> กับ <code>INSERT</code> เท่านั้น ส่วน <code>lib/supabase-admin.ts</code> ใช้
+          Service Role Key บนฝั่ง Server เฉพาะใน API ของ Admin (หลังจากตรวจ JWT ผ่านแล้ว) เพื่อใช้สิทธิ์ระดับแอดมินในการ
+          <code>UPDATE</code> หรือ <code>DELETE</code> ป้องกันคนนอกยิงแก้ไขฐานข้อมูลจากหน้าเว็บโดยตรงครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 2: ข้อมูลกลุ่มสาระ เบอร์โทรศัพท์ และรหัสรับแจ้งเตือน (Push Subscription)
+          เก็บไว้ที่ไหนในฐานข้อมูล?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> เพื่อความยืดหยุ่นโดยไม่ต้องเพิ่มคอลัมน์จำนวนมากในตาราง ระบบนำข้อมูลหมายเหตุ, กลุ่มสาระ
+          (<code>---DEPARTMENT---</code>), เบอร์ติดต่อ (<code>---CONTACT_INFO---</code>), และรหัสรับแจ้งเตือน
+          (<code>---PUSH_SUB---</code>) มาคั่นด้วย Delimiter เก็บรวมไว้ในคอลัมน์ <code>details</code> และเวลาแสดงผลฝั่ง
+          Admin หรือตอนกด Export Excel จะมีฟังก์ชัน <code>parseBooking</code>
+          แยกข้อมูลแต่ละส่วนออกมาแสดงผลและคำนวณสถิติได้อย่างแม่นยำครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 3: ถ้ามีคนพยายามสุ่มรหัสผ่าน Admin (Brute-force) หรือกดส่งฟอร์มรัวๆ
+          ระบบรับมืออย่างไร?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> เรามีโมดูล <code>lib/rate-limit.ts</code> ที่ดึง IP Address ของผู้เรียกผ่าน Header
+          <code>x-forwarded-for</code> มานับจำนวนครั้งต่อ 1 นาทีแยกตามความเสี่ยงของแต่ละ API เช่น ส่งรายงานปัญหาจำกัด
+          <strong>3 ครั้ง/นาที</strong>, จองห้องประชุมจำกัด <strong>5 ครั้ง/นาที</strong>, และล็อกอิน Admin จำกัด
+          <strong>10 ครั้ง/นาที</strong> หากเกินจะตัดการทำงานและคืนค่า HTTP <code>429 Too Many Requests</code> ทันทีครับ
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4: MORE COMMITTEE Q&A (ARCHITECTURE, UX, SECURITY & FUTURE WORK) -->
+    <div class="section page-break-section">
+      <h2 class="section-title"><span class="section-icon">6</span> คำถามเก็งพิเศษ: เจาะลึกเหตุผลการเลือกเทคโนโลยี,
+        การใช้งานจริง & การต่อยอด (Q4–Q12)</h2>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 4: ทำไมถึงเลือกพัฒนาเว็บเองด้วย Next.js + Supabase แทนที่จะใช้ Google Forms
+          คู่กับ Google Sheets?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> Google Forms <strong>ไม่สามารถบล็อกเวลาที่จองชนกันแบบอัตโนมัติได้</strong>
+          (คนกรอกฟอร์มจะไม่รู้เลยว่าเวลานั้นมีคนจองไปหรือยังจนกว่าแอดมินจะมาเช็คมือ)
+          และไม่สามารถแจ้งเตือนสถานะกลับหาผู้จองแบบ Real-time ได้ การใช้ <strong>Next.js + Supabase</strong>
+          ทำให้เราเขียน Logic ดักจับเวลาชนกันได้ทันที มีปฏิทินสถานะห้องว่างให้ดูสดๆ ส่งแจ้งเตือนเข้าอุปกรณ์ได้
+          และยังซิงค์ข้อมูลสำรองเข้า Google Sheets หรือส่งออก Excel ได้ในคลิกเดียวครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 5: ถ้ามีผู้ไม่หวังดีไม่กรอกผ่านหน้าเว็บ แต่ใช้โปรแกรม Postman ยิงข้อมูลมั่วๆ
+          เข้า API หลังบ้านโดยตรง ระบบจะพังไหม?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> ไม่พังครับ เพราะเราออกแบบตามหลัก <strong>Zero Trust</strong> คือไม่ไว้ใจข้อมูลจากฝั่ง
+          Client เลย ใน <code>POST /api/bookings</code> มีการตรวจสอบซ้ำทุกฟิลด์ที่ฝั่ง Server (เช็คค่าว่าง,
+          เช็ควันย้อนหลัง, เช็คเวลาเริ่มต้องน้อยกว่าเวลาจบ, เช็คเวลาชนกัน และแปลงอักขระป้องกัน XSS)
+          หากยิงข้อมูลผิดเงื่อนไขเข้ามา Server จะดีดกลับด้วย HTTP Status <code>400 Bad Request</code>
+          ทันทีก่อนถึงฐานข้อมูลครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 6: ทำไมตอนล็อกอินแอดมิน ถึงเก็บ JWT Token ไว้ใน HTTP-Only Cookie
+          แทนที่จะเก็บใน localStorage?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> ถ้าเก็บ Token ไว้ใน <code>localStorage</code> เวลาเว็บถูกโจมตีด้วยสคริปต์ (XSS)
+          แฮกเกอร์สามารถสั่ง <code>localStorage.getItem()</code> ขโมย Token ไปสวมรอยเป็นแอดมินได้ทันที แต่การตั้งค่า
+          <code>httpOnly: true</code> และ <code>sameSite: 'strict'</code> ใน <code>app/api/admin/login/route.ts</code>
+          จะทำให้ JavaScript ฝั่งหน้าเว็บมองไม่เห็นและอ่านค่า Cookie นี้ไม่ได้เลย ป้องกันทั้งการขโมย Token (XSS)
+          และการปลอมแปลงคำขอข้ามเว็บ (CSRF) ครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 7: ระบบแจ้งเตือน (Notification) ทำงานอย่างไร
+          ทำไมผู้จองปิดหน้าเว็บไปแล้วถึงยังมีแจ้งเตือนเด้งขึ้นมาได้?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> เราใช้ระบบแจ้งเตือน 2 รูปแบบควบคู่กันครับ:<br>
+          1. <strong>กรณีเปิดหน้าเว็บค้างไว้:</strong> ใช้ <strong>Supabase Realtime (WebSocket)</strong> ใน
+          <code>BookingStatusWatcher.tsx</code> ดักฟังการเปลี่ยนแปลงของตาราง <code>bookings</code>
+          แล้วเด้งป๊อปอัปแจ้งบนหน้าจอทันที<br>
+          2. <strong>กรณีปิดหน้าเว็บหรือพับจอไปแล้ว:</strong> ใช้ <strong>Service Worker (<code>public/sw.js</code>)
+            คู่กับ Web Push API (VAPID Keys)</strong> ซึ่งทำงานอยู่เบื้องหลังของเบราว์เซอร์ ทำให้เซิร์ฟเวอร์ส่ง Push
+          Notification ปลุกให้เด้งแจ้งเตือนระดับ OS/มือถือได้แม้ไม่ได้เปิดแท็บเว็บอยู่ครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 8: ในโหมด "จองหลายวันพร้อมกัน" (Multiple Dates) ถ้าจอง 3 วัน แล้วมี 1
+          วันที่ห้องไม่ว่าง ระบบทำงานอย่างไร?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> ในไฟล์ <code>components/BookingForm.tsx</code> (บรรทัด 152–179)
+          ระบบจะวนลูปส่งคำขอจองแยกทีละวันไปยัง API เพื่อให้ตรวจสอบเวลาชนกันของแต่ละวันอย่างอิสระ
+          หากวันไหนว่างระบบจะบันทึกให้ตามปกติ และหากวันไหนมีคิวชน ระบบจะขึ้น Toast
+          แจ้งเตือนระบุวันที่ไม่สำเร็จให้ผู้จองทราบทันที
+          เพื่อจะได้เลือกเปลี่ยนเวลาเฉพาะวันที่มีปัญหาได้โดยไม่ต้องกรอกใหม่ทั้งหมดครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 9: ระบบออกรายงาน (Export Excel / พิมพ์เอกสารราชการ)
+          คำนวณชั่วโมงและสรุปสถิติอย่างไร?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> ใน <code>components/ExportModal.tsx</code> แอดมินสามารถเลือกกรองตามเดือน ปี พ.ศ.
+          และห้องประชุมได้ โดยฟังก์ชัน <code>getDurationHours</code> จะคำนวณส่วนต่างระหว่าง <code>start_time</code> กับ
+          <code>end_time</code> ออกมาเป็นจำนวนชั่วโมงใช้งานจริง สรุปแยกตามห้องประชุมและแยกตามกลุ่มสาระ/ฝ่ายงาน
+          พร้อมสร้างไฟล์ Excel (<code>.xlsx</code>) ที่มี 2 ชีต (ชีตสรุปสถิติสำหรับผู้บริหาร
+          และชีตรายละเอียดการจองทั้งหมด) หรือกดสั่งพิมพ์หน้ากระดาษ A4 พร้อมช่องลงนามราชการได้ทันทีครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 10: ถ้าผู้จองกรอกข้อมูลผิด หรือต้องการแก้ไขวัน-เวลาหลังจากกดจองไปแล้ว
+          ต้องทำอย่างไร?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> ผู้จองสามารถคลิกที่รายการจองของตนเองในปฏิทินหน้าแรก แล้วกดปุ่ม
+          <strong>"ยกเลิกการจอง"</strong> โดยกรอกเบอร์โทรศัพท์ที่ใช้ตอนจองเพื่อยืนยันตัวตน
+          (<code>/api/bookings/request-change</code>) เมื่อระบบเปลี่ยนสถานะเป็นยกเลิกแล้ว
+          ช่วงเวลานั้นจะกลับมาว่างทันทีเพื่อให้ผู้จองกดส่งคำขอใหม่ในเวลาที่ถูกต้องได้เลย
+          หรือให้แอดมินช่วยยกเลิกให้จากหลังบ้านก็ได้ครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 11: หากนำไปใช้งานจริงในโรงเรียน
+          ระบบนี้ช่วยลดภาระงานหรือแก้ปัญหาเดิมของโรงเรียนได้อย่างไรบ้าง?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> แก้ปัญหาหลักได้ 3 ด้านครับ: (1) <strong>ลดปัญหาการจองห้องชนกัน</strong>
+          จากเดิมที่ต้องเดินไปเขียนสมุดหรือทักไลน์ถามเจ้าหน้าที่ (2) <strong>ลดเวลาการตามงาน</strong>
+          เพราะมีระบบแจ้งเตือนอัตโนมัติทั้งฝั่งแอดมินและผู้จอง ไม่ต้องคอยโทรถามว่าอนุมัติหรือยัง และ (3)
+          <strong>ลดภาระการทำรายงานสรุปประจำเดือน/ประจำปี</strong> ของฝ่ายอาคารสถานที่ เพราะสามารถกด Export
+          สถิติการใช้ห้องประชุมออกมาเป็นไฟล์ Excel เสนอผู้อำนวยการได้ในคลิกเดียวครับ
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-question">❓ คำถามที่ 12: ถ้ามีเวลาพัฒนาต่อยอดในอนาคต (Future Work)
+          อยากพัฒนาฟีเจอร์อะไรเพิ่มเติมให้กับระบบนี้?</div>
+        <div class="qa-answer">
+          <strong>คำตอบ:</strong> วางแผนต่อยอดไว้ 3 ส่วนครับ: (1) <strong>ระบบจัดการห้องประชุมแบบ Dynamic</strong>
+          ให้แอดมินสามารถกดเพิ่ม/ลดห้องประชุม หรือตั้งเวลาปิดปรับปรุงห้องได้จากหน้าเว็บโดยไม่ต้องแก้โค้ด (2)
+          <strong>การระบุอุปกรณ์เสริมและรูปแบบการจัดโต๊ะ</strong> เช่น ขอไมโครโฟนเพิ่ม โปรเจกเตอร์ หรือเบรกอาหารว่าง และ
+          (3) <strong>เชื่อมต่อ LINE Messaging API (LINE OA)</strong> เพื่อให้แจ้งเตือนและกดอนุมัติผ่านแชท LINE
+          ของโรงเรียนได้โดยตรงครับ
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      เอกสารสรุปแนวทางการนำเสนอ Source Code & เตรียมสอบสัมภาษณ์ • ระบบจองห้องประชุมออนไลน์ โรงเรียนพรหมคีรีพิทยาคม
+    </div>
+
+  </div>
+
+</body>
+
+</html>

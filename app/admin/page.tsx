@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
-  
+
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ทั้งหมด' | 'รออนุมัติ' | 'อนุมัติแล้ว' | 'ยกเลิก'>('ทั้งหมด');
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
       for (let i = 0; i < rawData.length; ++i) {
         outputArray[i] = rawData.charCodeAt(i);
       }
-      
+
       let subscription = await registration.pushManager.getSubscription();
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
@@ -197,7 +197,7 @@ export default function AdminDashboard() {
       <Navbar />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6">
-        
+
         {/* Admin Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
 
         {/* Filter and Search Bar Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl glass-panel border border-slate-200/50 dark:border-zinc-800/40">
-          
+
           {/* Status Tabs Filter */}
           <div className="flex flex-wrap gap-1">
             {(['ทั้งหมด', 'รออนุมัติ', 'อนุมัติแล้ว', 'ยกเลิก'] as const).map((tab) => {
@@ -240,11 +240,10 @@ export default function AdminDashboard() {
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer select-none ${
-                    isActive
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer select-none ${isActive
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
                       : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40'
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -321,7 +320,7 @@ export default function AdminDashboard() {
                       let department = '';
                       if (booking.details) {
                         const noPushSub = booking.details.split('---PUSH_SUB---')[0];
-                        
+
                         const contactMatch = noPushSub.match(/---CONTACT_INFO---\s*([\s\S]*?)(?:---[A-Z_]+---|$)/);
                         if (contactMatch) {
                           contactInfo = contactMatch[1].trim();
@@ -481,7 +480,7 @@ export default function AdminDashboard() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/25 text-indigo-600 dark:text-indigo-400 shadow-inner">
                 <HelpCircle className="h-6 w-6" />
               </div>
-              
+
               <div className="space-y-1.5">
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
                   ยืนยันการดำเนินการ
@@ -490,8 +489,8 @@ export default function AdminDashboard() {
                   {confirmModal.action === 'อนุมัติแล้ว'
                     ? `คุณต้องการอนุมัติรายการ "${confirmModal.activityName}" ใช่หรือไม่?`
                     : confirmModal.action === 'ยกเลิก'
-                    ? `คุณต้องการยกเลิกรายการ "${confirmModal.activityName}" ใช่หรือไม่?`
-                    : `คุณต้องการลบรายการ "${confirmModal.activityName}" ใช่หรือไม่?`}
+                      ? `คุณต้องการยกเลิกรายการ "${confirmModal.activityName}" ใช่หรือไม่?`
+                      : `คุณต้องการลบรายการ "${confirmModal.activityName}" ใช่หรือไม่?`}
                 </p>
                 {confirmModal.action === 'ยกเลิก' && (
                   <div className="pt-3 text-left space-y-1.5">
@@ -519,13 +518,12 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   onClick={handleConfirmAction}
-                  className={`flex-1 py-2.5 rounded-xl text-white font-bold hover:scale-[1.01] transition text-xs sm:text-sm cursor-pointer ${
-                    confirmModal.action === 'อนุมัติแล้ว'
+                  className={`flex-1 py-2.5 rounded-xl text-white font-bold hover:scale-[1.01] transition text-xs sm:text-sm cursor-pointer ${confirmModal.action === 'อนุมัติแล้ว'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : confirmModal.action === 'ยกเลิก'
-                      ? 'bg-rose-600 hover:bg-rose-700'
-                      : 'bg-slate-600 hover:bg-slate-700'
-                  }`}
+                        ? 'bg-rose-600 hover:bg-rose-700'
+                        : 'bg-slate-600 hover:bg-slate-700'
+                    }`}
                 >
                   ยืนยัน
                 </button>

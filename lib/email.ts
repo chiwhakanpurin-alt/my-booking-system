@@ -83,7 +83,7 @@ export async function sendBookingNotificationToAdmin(data: EmailNotificationData
               <span class="value">${details}</span>
             </div>` : ''}
             
-            <a href="https://booking.your-domain.com/admin" class="button">ไปที่ระบบจัดการ</a>
+            ${process.env.NEXT_PUBLIC_APP_URL ? `<a href="${process.env.NEXT_PUBLIC_APP_URL}/admin" class="button">ไปที่ระบบจัดการ</a>` : ''}
             
             <p style="margin-top: 30px; color: #999; font-size: 14px;">
               โปรดเข้าสู่ระบบแล้วตรวจสอบและอนุมัติการจองนี้

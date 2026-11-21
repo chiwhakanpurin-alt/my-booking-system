@@ -15,7 +15,7 @@ const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@booking.com';
 export async function POST(request: Request) {
   try {
     const ip = getIP(request);
-    const { success } = rateLimit(ip, 3, 60 * 1000); // 3 feedbacks per minute
+    const { success } = rateLimit(`feedback:${ip}`, 3, 60 * 1000); // 3 feedbacks per minute
     if (!success) {
       return NextResponse.json({ success: false, message: 'ส่งบ่อยเกินไป กรุณารอสักครู่' }, { status: 429 });
     }
@@ -25,6 +25,14 @@ export async function POST(request: Request) {
     if (!message?.trim()) {
       return NextResponse.json({ success: false, message: 'กรุณาระบุรายละเอียดปัญหา' }, { status: 400 });
     }
+
+    // Security: Sanitize inputs against HTML injection before embedding in email
+    const sanitize = (str: string) =>
+      str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').trim();
+
+    const safeName = name ? sanitize(String(name)) : 'ไม่ระบุ';
+    const safeEmail = email ? sanitize(String(email)) : 'ไม่ระบุ';
+    const safeMessage = sanitize(String(message));
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -46,11 +54,11 @@ export async function POST(request: Request) {
             <h2>🚨 มีรายงานปัญหาใหม่ (Feedback)</h2>
           </div>
           <div class="content">
-            <p><span class="label">ผู้รายงาน:</span> ${name || 'ไม่ระบุ'}</p>
-            <p><span class="label">อีเมลติดต่อ:</span> ${email || 'ไม่ระบุ'}</p>
+            <p><span class="label">ผู้รายงาน:</span> ${safeName}</p>
+            <p><span class="label">อีเมลติดต่อ:</span> ${safeEmail}</p>
             <div class="box">
               <p class="label">รายละเอียดปัญหา:</p>
-              <p>${message.replace(/\n/g, '<br>')}</p>
+              <p>${safeMessage.replace(/\n/g, '<br>')}</p>
             </div>
           </div>
         </div>
@@ -61,7 +69,7 @@ export async function POST(request: Request) {
     const mailOptions = {
       from: `"PR Rooms System" <${process.env.GMAIL_USER}>`,
       to: adminEmail,
-      subject: `🚨 รายงานปัญหา: ${message.substring(0, 30)}...`,
+      subject: `🚨 รายงานปัญหา: ${safeMessage.substring(0, 30)}...`,
       html: htmlContent,
     };
 

@@ -97,14 +97,14 @@ export async function POST(request: Request) {
     // 5. 🚀 Send Push Notification to user (wait for it to finish)
     if (pushSubscription) {
       try {
-        const title = status === 'อนุมัติแล้ว' 
-          ? '✅ อนุมัติการจองแล้ว!' 
+        const title = status === 'อนุมัติแล้ว'
+          ? '✅ อนุมัติการจองแล้ว!'
           : '❌ ยกเลิกการจอง';
-        
+
         let bodyMsg = status === 'อนุมัติแล้ว'
           ? `การจองห้อง ${bookingData.room_name} ของคุณได้รับการอนุมัติแล้ว`
           : `การจองห้อง ${bookingData.room_name} ของคุณถูกยกเลิก`;
-        
+
         if (status === 'ยกเลิก' && reason) {
           bodyMsg += `\nหมายเหตุ: ${reason}`;
         }

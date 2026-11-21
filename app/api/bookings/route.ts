@@ -64,9 +64,16 @@ export async function GET(request: Request) {
       .order('booking_date', { ascending: true })
       .order('start_time', { ascending: true });
 
-    // Hide cancelled bookings from public view, but let admins see them for record keeping
+    // Hide cancelled bookings and old historical records (> 6 months ago) from public view for fast loading,
+    // while letting admins see all records across all years for full Excel/PDF reporting.
     if (!isAdmin) {
-      query = query.neq('status', 'ยกเลิก');
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const minDateStr = sixMonthsAgo.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+      query = query
+        .neq('status', 'ยกเลิก')
+        .gte('booking_date', minDateStr);
     }
 
     const { data, error } = await query;
@@ -88,9 +95,9 @@ export async function GET(request: Request) {
 // POST: Create a new booking (initial status: "รออนุมัติ")
 export async function POST(request: Request) {
   try {
-    // Security: Rate limiting (5 attempts per minute)
+    // Security: Rate limiting (20 attempts per minute to support multi-day bookings, scoped to bookings)
     const ip = getIP(request);
-    const { success } = rateLimit(ip, 5, 60 * 1000);
+    const { success } = rateLimit(`booking:${ip}`, 20, 60 * 1000);
     if (!success) {
       return NextResponse.json(
         { success: false, message: 'ส่งคำขอจองบ่อยเกินไป กรุณารอสักครู่' },
@@ -173,7 +180,7 @@ export async function POST(request: Request) {
       contactInfoString = `\n\n---CONTACT_INFO---\n${cleanContact}`;
     }
 
-    const combinedDetails = cleanDetails 
+    const combinedDetails = cleanDetails
       ? `${cleanDetails}${departmentString}${contactInfoString}${pushSubString}`
       : `${departmentString}${contactInfoString}${pushSubString}`.trim();
 
@@ -198,56 +205,63 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // 📧 Send notification to admin via Email (wait for it to finish)
-    try {
-      await sendBookingNotificationToAdmin({
-        activityName: cleanActivity,
-        bookedBy: cleanBookedBy,
-        department: cleanDepartment,
-        roomName: room_name,
-        bookingDate: booking_date,
-        startTime: start_time,
-        endTime: end_time,
-        details: cleanDetails,
-      });
-    } catch (err) {
-      console.error('Email to Admin Error:', err);
-    }
+    // 📧 Send notification to admin via Email (Non-blocking / Background for fast booking response)
+    sendBookingNotificationToAdmin({
+      activityName: cleanActivity,
+      bookedBy: cleanBookedBy,
+      department: cleanDepartment,
+      roomName: room_name,
+      bookingDate: booking_date,
+      startTime: start_time,
+      endTime: end_time,
+      details: cleanDetails,
+    }).catch((err) => console.error('Email to Admin Error:', err));
 
-    // 🚀 Send notification to admin via Web Push
-    try {
-      const { data: adminSubs } = await supabaseAdmin
-        .from('bookings')
-        .select('id, details')
-        .eq('activity_name', 'ADMIN_SUBSCRIPTION');
-      
-      if (adminSubs && adminSubs.length > 0) {
-        const title = '📢 มีคำขอจองห้องประชุมใหม่!';
-        const bodyMsg = `ผู้จอง: ${cleanBookedBy}${cleanDepartment ? ` (${cleanDepartment})` : ''}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time}`;
-        const payload = JSON.stringify({ title, body: bodyMsg });
+    // 🚀 Send notification to admin via Web Push (Non-blocking / Background with full payload)
+    (async () => {
+      try {
+        const { data: adminSubs } = await supabaseAdmin
+          .from('bookings')
+          .select('id, details')
+          .eq('activity_name', 'ADMIN_SUBSCRIPTION');
 
-        const pushPromises = adminSubs.map(async (sub) => {
-          try {
-            if (sub.details) {
-              const pushSubscription = JSON.parse(sub.details);
-              await webpush.sendNotification(pushSubscription, payload);
+        if (adminSubs && adminSubs.length > 0) {
+          const title = '📢 มีคำขอจองห้องประชุมใหม่!';
+          const bodyMsg = `ผู้จอง: ${cleanBookedBy}${cleanDepartment ? ` (${cleanDepartment})` : ''}\nห้อง: ${room_name}\nเวลา: ${start_time}-${end_time} น.`;
+          const payload = JSON.stringify({
+            title,
+            body: bodyMsg,
+            icon: '/school-logo.png',
+            badge: '/school-logo.png',
+            tag: `new-booking-${data.id}`,
+            vibrate: [200, 100, 200, 100, 250],
+            data: {
+              url: '/admin',
+            },
+          });
+
+          const pushPromises = adminSubs.map(async (sub) => {
+            try {
+              if (sub.details) {
+                const pushSubscription = JSON.parse(sub.details);
+                await webpush.sendNotification(pushSubscription, payload);
+              }
+            } catch (err: any) {
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                console.log('Deleting expired admin subscription:', sub.id);
+                await supabaseAdmin.from('bookings').delete().eq('id', sub.id);
+              } else {
+                console.error('Admin Push Notification Error:', err);
+              }
             }
-          } catch (err: any) {
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              // Subscription has expired or is no longer valid, delete it
-              console.log('Deleting expired admin subscription:', sub.id);
-              await supabaseAdmin.from('bookings').delete().eq('id', sub.id);
-            } else {
-              console.error('Admin Push Notification Error:', err);
-            }
-          }
-        });
+          });
 
-        await Promise.all(pushPromises);
+          await Promise.all(pushPromises);
+        }
+      } catch (err) {
+        console.error('Admin Web Push Process Error:', err);
       }
-    } catch (err) {
-      console.error('Admin Web Push Process Error:', err);
-    }
+    })();
 
     // 📧 Send confirmation to user (background)
     // Removed because the user only wants notification on approval

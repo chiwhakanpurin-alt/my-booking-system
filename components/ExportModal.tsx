@@ -434,7 +434,8 @@ export default function ExportModal({ isOpen, onClose, bookings }: ExportModalPr
 
           {/* Printable A4 Document Sheet */}
           <div className="flex-1 p-4 sm:p-8 flex justify-center print:p-0">
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+              __html: `
               @media print {
                 body * {
                   visibility: hidden !important;

@@ -19,6 +19,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ระบบจองห้องประชุม (PR Rooms Booking System)",
   description: "ระบบจองห้องประชุมออนไลน์ ค้นหาและจองห้องประชุมได้ทันที",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "จองห้องประชุม",
+  },
+  icons: {
+    icon: "/school-logo.png",
+    apple: "/school-logo.png",
+  },
 };
 
 export default function RootLayout({

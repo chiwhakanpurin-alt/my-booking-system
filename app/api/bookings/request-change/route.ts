@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { rateLimit, getIP } from '@/lib/rate-limit';
+import { syncToGoogleSheets } from '@/lib/google-sheets';
 
 export async function POST(request: Request) {
   try {
-    // Rate limiting
+    // Rate limiting (scoped to cancel action so it doesn't collide with login/booking on shared Wi-Fi)
     const ip = getIP(request);
-    const { success } = rateLimit(ip, 5, 60 * 1000);
+    const { success } = rateLimit(`cancel:${ip}`, 5, 60 * 1000);
     if (!success) {
       return NextResponse.json(
         { success: false, message: 'ส่งคำขอบ่อยเกินไป กรุณารอสักครู่' },
@@ -35,16 +36,18 @@ export async function POST(request: Request) {
 
     const cleanContact = contactInfo.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
 
-    // Verify contact info if it exists in the original booking
+    // Verify contact info strictly from the original booking
     let storedContact = '';
     if (booking.details) {
-      const contactSplit = booking.details.split('---CONTACT_INFO---');
-      if (contactSplit.length > 1) {
-        storedContact = contactSplit[1].split('---PUSH_SUB---')[0].trim();
+      const noPushSub = booking.details.split('---PUSH_SUB---')[0];
+      const contactMatch = noPushSub.match(/---CONTACT_INFO---\s*([\s\S]*?)(?:---[A-Z_]+---|$)/);
+      if (contactMatch) {
+        storedContact = contactMatch[1].trim();
       }
     }
 
-    if (storedContact && storedContact !== cleanContact) {
+    // Security: Deny if no stored contact exists or if contact info does not match exactly
+    if (!storedContact || storedContact !== cleanContact) {
       return NextResponse.json(
         { success: false, message: 'เบอร์ติดต่อไม่ตรงกับที่ใช้จอง กรุณาตรวจสอบอีกครั้ง' },
         { status: 403 }
@@ -52,13 +55,30 @@ export async function POST(request: Request) {
     }
 
     // Update status to Cancelled using supabaseAdmin to bypass RLS
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedBooking, error: updateError } = await supabaseAdmin
       .from('bookings')
       .update({ status: 'ยกเลิก' })
-      .eq('id', bookingId);
+      .eq('id', bookingId)
+      .select()
+      .single();
 
     if (updateError) {
       throw updateError;
+    }
+
+    // Sync cancellation status to Google Sheets in background
+    if (updatedBooking) {
+      syncToGoogleSheets('update', {
+        id: updatedBooking.id,
+        activity_name: updatedBooking.activity_name,
+        booked_by: updatedBooking.booked_by,
+        room_name: updatedBooking.room_name,
+        booking_date: updatedBooking.booking_date,
+        start_time: updatedBooking.start_time,
+        end_time: updatedBooking.end_time,
+        status: updatedBooking.status,
+        created_at: updatedBooking.created_at,
+      }).catch((err) => console.error('Background Google Sheets Cancel Sync Error:', err));
     }
 
     return NextResponse.json(

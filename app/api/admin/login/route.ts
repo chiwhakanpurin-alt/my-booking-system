@@ -14,9 +14,9 @@ async function sha256(text: string): Promise<string> {
 
 export async function POST(request: Request) {
   try {
-    // Security: Rate limiting (10 attempts per minute)
+    // Security: Rate limiting (10 attempts per minute, scoped to login)
     const ip = getIP(request);
-    const { success } = rateLimit(ip, 10, 60 * 1000);
+    const { success } = rateLimit(`login:${ip}`, 10, 60 * 1000);
     if (!success) {
       return NextResponse.json(
         { success: false, message: 'กรุณารอสักครู่ก่อนทำรายการใหม่' },

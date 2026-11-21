@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { CalendarDays, User, Clock, FileText, ArrowLeft, Loader2, Phone, Building2, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast, ToastContainer } from '@/components/Toast';
+import { TimePicker } from '@/components/ui/time-picker';
+import { ThaiDatePicker } from '@/components/ui/thai-date-picker';
 
 const MEETING_ROOMS = [
   'ห้องประชุมปลายน้ำ',
@@ -414,56 +416,40 @@ export default function BookingForm() {
                 <label htmlFor="booking_date" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
                   เลือกวันที่จอง <span className="text-rose-500">*</span>
                 </label>
-                <input
+                <ThaiDatePicker
                   id="booking_date"
                   name="booking_date"
-                  type="date"
                   required={bookingMode === 'single'}
-                  min={new Date().toLocaleDateString('en-CA')} // YYYY-MM-DD local timezone format
+                  min={new Date().toLocaleDateString('en-CA')}
                   value={formData.booking_date}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
+                  onChange={(val) => setFormData((prev) => ({ ...prev, booking_date: val }))}
                 />
               </div>
 
-              {/* Time Picker Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Time Picker Rows (แยกคนละบรรทัด) */}
+              <div className="space-y-4">
                 {/* Start Time */}
                 <div className="space-y-1.5">
-                  <label htmlFor="start_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                  <label htmlFor="start_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-pink-500" />
                     เวลาเริ่มต้น <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      id="start_time"
-                      name="start_time"
-                      type="time"
-                      required={bookingMode === 'single'}
-                      value={formData.start_time}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
-                    />
-                    <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
-                  </div>
+                  <TimePicker
+                    value={formData.start_time}
+                    onChange={(val) => setFormData((prev) => ({ ...prev, start_time: val }))}
+                  />
                 </div>
 
                 {/* End Time */}
                 <div className="space-y-1.5">
-                  <label htmlFor="end_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300">
+                  <label htmlFor="end_time" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-pink-500" />
                     เวลาสิ้นสุด <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      id="end_time"
-                      name="end_time"
-                      type="time"
-                      required={bookingMode === 'single'}
-                      value={formData.end_time}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 pl-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
-                    />
-                    <Clock className="absolute left-4 top-3.5 h-4.5 w-4.5 text-slate-400 dark:text-zinc-500" />
-                  </div>
+                  <TimePicker
+                    value={formData.end_time}
+                    onChange={(val) => setFormData((prev) => ({ ...prev, end_time: val }))}
+                  />
                 </div>
               </div>
             </>
@@ -473,62 +459,65 @@ export default function BookingForm() {
                 รายการวันที่ต้องการจอง <span className="text-rose-500">*</span>
               </label>
               {multipleDates.map((item, index) => (
-                <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-end border-b border-slate-200 dark:border-zinc-800 pb-4 last:border-0 last:pb-0">
-                  <div className="space-y-1.5 w-full">
-                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">วันที่ {index + 1}</label>
-                    <input
-                      type="date"
-                      required={bookingMode === 'multiple'}
-                      min={new Date().toLocaleDateString('en-CA')}
-                      value={item.date}
-                      onChange={(e) => {
-                        const newDates = [...multipleDates];
-                        newDates[index].date = e.target.value;
-                        setMultipleDates(newDates);
-                      }}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
-                    />
+                <div key={index} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">วันที่ {index + 1}</label>
+                    {multipleDates.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDates = multipleDates.filter((_, i) => i !== index);
+                          setMultipleDates(newDates);
+                        }}
+                        className="h-8 px-2.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-lg border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition font-bold text-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> ลบวันนี้
+                      </button>
+                    )}
                   </div>
-                  <div className="space-y-1.5 w-full sm:w-28">
-                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">เริ่ม</label>
-                    <input
-                      type="time"
-                      required={bookingMode === 'multiple'}
+
+                  {/* วันที่ */}
+                  <ThaiDatePicker
+                    required={bookingMode === 'multiple'}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    value={item.date}
+                    className="px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-900"
+                    onChange={(val) => {
+                      const newDates = [...multipleDates];
+                      newDates[index].date = val;
+                      setMultipleDates(newDates);
+                    }}
+                  />
+
+                  {/* เวลาเริ่มต้น (บรรทัดแรก) */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400 flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5 text-pink-500" /> เวลาเริ่มต้น
+                    </label>
+                    <TimePicker
                       value={item.start_time}
-                      onChange={(e) => {
+                      onChange={(val) => {
                         const newDates = [...multipleDates];
-                        newDates[index].start_time = e.target.value;
+                        newDates[index].start_time = val;
                         setMultipleDates(newDates);
                       }}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
                     />
                   </div>
-                  <div className="space-y-1.5 w-full sm:w-28">
-                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400">สิ้นสุด</label>
-                    <input
-                      type="time"
-                      required={bookingMode === 'multiple'}
+
+                  {/* เวลาสิ้นสุด (คนละบรรทัด) */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-zinc-400 flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5 text-pink-500" /> เวลาสิ้นสุด
+                    </label>
+                    <TimePicker
                       value={item.end_time}
-                      onChange={(e) => {
+                      onChange={(val) => {
                         const newDates = [...multipleDates];
-                        newDates[index].end_time = e.target.value;
+                        newDates[index].end_time = val;
                         setMultipleDates(newDates);
                       }}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all text-sm cursor-pointer"
                     />
                   </div>
-                  {multipleDates.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newDates = multipleDates.filter((_, i) => i !== index);
-                        setMultipleDates(newDates);
-                      }}
-                      className="h-[42px] px-3 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition font-bold text-xs flex items-center gap-1 w-full sm:w-auto justify-center cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" /> <span className="sm:hidden">ลบ</span>
-                    </button>
-                  )}
                 </div>
               ))}
               <div className="pt-2">
